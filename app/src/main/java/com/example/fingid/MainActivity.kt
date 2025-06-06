@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.fingid.navigation.Screen
 import com.example.fingid.ui.components.AppBottomNavigationBar
+import com.example.fingid.ui.screens.SettingsScreen
 import com.example.fingid.ui.theme.FinGidTheme
 
 class MainActivity : ComponentActivity() {
@@ -59,8 +60,7 @@ fun AppContent() {
                 Text("Экран Статей")
             }
             composable(Screen.Settings.route) {
-                // TODO: Позже здесь будет SettingsScreen()
-                Text("Экран Настроек")
+                SettingsScreen()
             }
         }
     }
