@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowCompat
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 private val DarkColorScheme = darkColorScheme(
     primary = AppGreen,
@@ -39,11 +40,6 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
-fun Color.isActuallyLight(): Boolean {
-    val androidColor = this.toArgb()
-    return ColorUtils.calculateLuminance(androidColor) > 0.5
-}
-
 
 @Composable
 fun FinGidTheme(
@@ -61,15 +57,6 @@ fun FinGidTheme(
         else -> LightColorScheme
     }
 
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            val insetsController = WindowCompat.getInsetsController(window, view)
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            //TODO: Доработать цвет статус бара в цвет фона и потом пофиксить косяки с настройками, чтоы было как в фигме
-        }
-    }
 
     MaterialTheme(
         colorScheme = colorScheme,

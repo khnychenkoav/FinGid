@@ -21,13 +21,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.fingid.navigation.Screen
 
 sealed class BottomNavItem(
-    val route: String,         // Маршрут из Screen
-    val titleResId: Int,       // ID строкового ресурса для названия
-    val icon: ImageVector      // Иконка Material Design
+    val route: String,
+    val titleResId: Int,
+    val icon: ImageVector
 ) {
     object Expenses : BottomNavItem(Screen.Expenses.route, R.string.bottom_nav_expenses, Icons.Filled.Payment)
-    object Income : BottomNavItem(Screen.Income.route, R.string.bottom_nav_income, Icons.Filled.AccountBalanceWallet) // Используйте подходящую иконку
-    object Account : BottomNavItem(Screen.Account.route, R.string.bottom_nav_account, Icons.Filled.Analytics) // Позже можно заменить на более подходящую для "Счета"
+    object Income : BottomNavItem(Screen.Income.route, R.string.bottom_nav_income, Icons.Filled.AccountBalanceWallet)
+    object Account : BottomNavItem(Screen.Account.route, R.string.bottom_nav_account, Icons.Filled.Analytics)
     object Articles : BottomNavItem(Screen.Articles.route, R.string.bottom_nav_articles,
         Icons.AutoMirrored.Filled.ListAlt
     )
@@ -53,16 +53,13 @@ fun AppBottomNavigationBar(navController: NavController) {
                 icon = { Icon(item.icon, contentDescription = stringResource(item.titleResId)) },
                 label = { Text(stringResource(item.titleResId)) },
                 selected = currentRoute == item.route,
-                alwaysShowLabel = true, // Показываем метки всегда, как в Figma
+                alwaysShowLabel = true,
                 onClick = {
                     navController.navigate(item.route) {
-                        // Переходим к начальному экрану графа навигации (избегаем большого стека)
                         popUpTo(navController.graph.startDestinationId) {
                             saveState = true
                         }
-                        // Избегаем нескольких копий одного и того же экрана в стеке
                         launchSingleTop = true
-                        // Восстанавливаем состояние при повторном выборе элемента
                         restoreState = true
                     }
                 }
