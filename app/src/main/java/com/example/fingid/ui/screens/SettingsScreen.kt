@@ -1,29 +1,36 @@
 package com.example.fingid.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.ArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,100 +43,93 @@ import com.example.fingid.ui.theme.FinGidTheme
 fun SettingsScreen() {
     val settingsItems = remember {
         listOf(
-            SettingItem(title = "Светлая темная авто", hasSwitch = true, isSwitchEnabled = false, onSwitchChange = {}),
-            SettingItem(title = "Основной цвет", onClickAction = {}),
-            SettingItem(title = "Звуки", onClickAction = {}),
-            SettingItem(title = "Хаптики", onClickAction = {}),
-            SettingItem(title = "Код пароль", onClickAction = {}),
-            SettingItem(title = "Синхронизация", onClickAction = {}),
-            SettingItem(title = "Язык", onClickAction = {}),
-            SettingItem(title = "О программе", onClickAction = {})
+            SettingItem(title = "Светлая темная авто", hasSwitch = true, isSwitchEnabled = false),
+            SettingItem(title = "Основной цвет"),
+            SettingItem(title = "Звуки"),
+            SettingItem(title = "Хаптики"),
+            SettingItem(title = "Код пароль"),
+            SettingItem(title = "Синхронизация"),
+            SettingItem(title = "Язык"),
+            SettingItem(title = "О программе")
         )
     }
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text("Настройки") },
-                colors = TopAppBarDefaults.topAppBarColors(
+            CenterAlignedTopAppBar(
+                title = { Text("Настройки", style = MaterialTheme.typography.titleLarge) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        },
-    ) { scaffoldPaddingValues ->
+        }
+    ) { padding ->
         LazyColumn(
             modifier = Modifier
-                .padding(scaffoldPaddingValues)
+                .padding(padding)
                 .fillMaxSize()
         ) {
             items(settingsItems) { item ->
-                val listIsOnPrimaryBackground = MaterialTheme.colorScheme.background == MaterialTheme.colorScheme.primary
-                SettingRow(item = item, useOnPrimaryColor = listIsOnPrimaryBackground)
-                HorizontalDivider(
-                    thickness = 0.5.dp,
-                    color = if (listIsOnPrimaryBackground) {
-                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
-                    } else {
-                        MaterialTheme.colorScheme.outlineVariant
-                    }
-                )
+                SettingRow(item)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
             }
         }
     }
 }
 
 @Composable
-fun SettingRow(item: SettingItem, useOnPrimaryColor: Boolean) {
-    val textColor = if (useOnPrimaryColor) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
-    val iconTint = if (useOnPrimaryColor) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-
+fun SettingRow(item: SettingItem) {
+    var checked by remember { mutableStateOf(item.isSwitchEnabled) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = item.onClickAction != null, onClick = { item.onClickAction?.invoke() })
-            .padding(horizontal = 16.dp, vertical = 20.dp),
+            .height(56.dp)
+            .clickable(enabled = !item.hasSwitch) { }
+            .padding(horizontal = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.Start
     ) {
-        Text(
-            text = item.title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = textColor
-        )
+        Text(text = item.title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
+        Spacer(modifier = Modifier.weight(1f))
         if (item.hasSwitch) {
             Switch(
-                checked = item.isSwitchEnabled,
-                onCheckedChange = item.onSwitchChange
+                checked = checked,
+                onCheckedChange = { checked = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    uncheckedTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                )
             )
-        } else if (item.onClickAction != null) {
+        } else {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                contentDescription = item.title,
-                tint = iconTint,
-                modifier = Modifier.size(16.dp)
+                imageVector = Icons.AutoMirrored.Filled.ArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
             )
         }
     }
 }
 
-@Preview(showBackground = true, name = "Settings Screen Full Preview")
 @Composable
+@Preview(showBackground = true)
 fun SettingsScreenPreview() {
     FinGidTheme(darkTheme = false) {
         SettingsScreen()
     }
 }
 
-@Preview(showBackground = true, name = "Setting Row On Default Background Preview")
 @Composable
+@Preview(showBackground = true)
 fun SettingRowPreview() {
     FinGidTheme {
-        Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
-            SettingRow(SettingItem(title = "Обычный пункт", onClickAction = {}), useOnPrimaryColor = false)
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            SettingRow(SettingItem(title = "Пункт с переключателем", hasSwitch = true, isSwitchEnabled = true, onSwitchChange = {}), useOnPrimaryColor = false)
+        Column {
+            SettingRow(SettingItem(title = "Пункт без свича"))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
+            SettingRow(SettingItem(title = "Пункт со свичем", hasSwitch = true, isSwitchEnabled = true))
         }
     }
 }
