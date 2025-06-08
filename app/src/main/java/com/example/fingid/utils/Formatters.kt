@@ -1,6 +1,6 @@
 package com.example.fingid.utils
 
-fun String.formatAsRuble(): String {
+fun String.formatAsRuble(currencySymbol: String = "₽"): String {
     if (isEmpty()) return ""
     val sign   = if (startsWith('-')) "-" else ""
     val digits = filter { it.isDigit() }
@@ -14,6 +14,6 @@ fun String.formatAsRuble(): String {
     return buildString {
         append(sign)
         append(sb)
-        append(" ₽")
+        append(" $currencySymbol")
     }
 }

@@ -14,7 +14,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +43,7 @@ import com.example.fingid.ui.theme.FinGidTheme
 import com.example.fingid.ui.theme.LightGreen
 import com.example.fingid.R
 import com.example.fingid.navigation.Screen
+import com.example.fingid.ui.components.CurrencyBottomSheet
 import com.example.fingid.ui.theme.AppGreen
 import com.example.fingid.ui.theme.BrightOrange
 import com.example.fingid.ui.theme.DividerColor
@@ -61,6 +66,10 @@ fun AccountScreen(
     val iconCircleBalanceBg = Color(0xFFFFF3E0)
     val currencyRowBackgroundColor = LightGreen
     val chartData = remember { mockFeb2025() }
+    var selectedCurrencySymbol by remember { mutableStateOf("₽") }
+    val currencySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showCurrencyBottomSheet by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val accountInfoItems = remember(currencyRowBackgroundColor, currentBalance) {
         listOf(
@@ -70,7 +79,7 @@ fun AccountScreen(
                 displayIcon = "💰",
                 displayIconColor = Black,
                 iconCircleBackgroundColor = iconCircleBalanceBg,
-                value = currentBalance.formatAsRuble(),
+                value = currentBalance.formatAsRuble(selectedCurrencySymbol),
                 valueColor = Black,
                 backgroundColor = LightGreen,
                 showArrow = true
@@ -80,7 +89,7 @@ fun AccountScreen(
                 title = "Валюта",
                 displayIcon = null,
                 iconCircleBackgroundColor = null,
-                value = "₽",
+                value = selectedCurrencySymbol,
                 valueColor = Black,
                 backgroundColor = currencyRowBackgroundColor,
                 showArrow = true
@@ -99,7 +108,7 @@ fun AccountScreen(
                 ),
                 actions = {
                     IconButton(onClick = {
-                        navController.navigate(Screen.EditAccount.createRoute(currentBalance))
+                        navController.navigate(Screen.EditAccount.createRoute(currentBalance.replace(Regex("[^0-9.-]"), "")))
                     }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_pencil),
@@ -141,7 +150,7 @@ fun AccountScreen(
                     if (item.id == "balance") {
                         navController.navigate(Screen.EditAccount.createRoute(item.value))
                     } else if (item.id == "currency") {
-                        // TODO: Навигация для редактирования валюты
+                        showCurrencyBottomSheet = true
                     }
                 })
                 if (item.id == "balance" && accountInfoItems.indexOf(item) < accountInfoItems.size -1) {
@@ -159,6 +168,17 @@ fun AccountScreen(
                     .fillMaxWidth()
                     .height(200.dp)
                     .padding(horizontal = 16.dp)
+            )
+        }
+
+        if (showCurrencyBottomSheet) {
+            CurrencyBottomSheet(
+                sheetState = currencySheetState,
+                onDismiss = { showCurrencyBottomSheet = false },
+                onCurrencySelected = { currency ->
+                    selectedCurrencySymbol = currency.symbol
+                    println("Выбрана валюта: ${currency.name}")
+                }
             )
         }
     }
@@ -332,7 +352,7 @@ fun AccountInfoRowPreview() {
                     displayIcon = "💰",
                     displayIconColor = Black,
                     iconCircleBackgroundColor = iconCircleBalanceBg,
-                    value = "-100 000 ₽",
+                    value = "-100000",
                     valueColor = Black,
                     showArrow = true,
                     backgroundColor = LightGreen
