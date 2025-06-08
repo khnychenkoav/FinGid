@@ -6,4 +6,7 @@ sealed class Screen(val route: String) {
     object Account : Screen("account_screen")
     object Articles : Screen("articles_screen")
     object Settings : Screen("settings_screen")
+    object EditAccount : Screen("edit_account_screen/{balanceValue}") {
+        fun createRoute(balanceValue: String) = "edit_account_screen/$balanceValue"
+    }
 }

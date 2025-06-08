@@ -15,16 +15,23 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.fingid.navigation.Screen
 import com.example.fingid.ui.components.AppBottomNavigationBar
 import com.example.fingid.ui.screens.AccountScreen
 import com.example.fingid.ui.screens.ArticlesScreen
+import com.example.fingid.ui.screens.EditAccountScreen
 import com.example.fingid.ui.screens.SettingsScreen
 import com.example.fingid.ui.theme.FinGidTheme
 
@@ -45,6 +52,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppRoot() {
     val navController = rememberNavController()
+    var currentAccountBalance by remember { mutableStateOf("-670 000 ₽") }
 
     Column(modifier = Modifier.fillMaxSize()) {
         NavHost(
@@ -55,13 +63,34 @@ fun AppRoot() {
             composable(Screen.Expenses.route) { SimpleScreenContent("Экран Расходов") }
             composable(Screen.Income.route) { SimpleScreenContent("Экран Доходов") }
             composable(Screen.Account.route) {
-                AccountScreen()
+                AccountScreen(
+                    navController = navController,
+                    currentBalance = currentAccountBalance
+                )
             }
             composable(Screen.Articles.route) {
                 ArticlesScreen()
             }
             composable(Screen.Settings.route) {
                 SettingsScreen()
+            }
+            composable(
+                route = Screen.EditAccount.route,
+                arguments = listOf(navArgument("balanceValue") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val balanceValue = backStackEntry.arguments?.getString("balanceValue") ?: ""
+                EditAccountScreen(
+                    navController = navController,
+                    initialBalance = balanceValue,
+                    onSaveAccount = { newBalance ->
+                        currentAccountBalance = newBalance
+                        println("Баланс сохранен: $newBalance")
+                    },
+                    onDeleteAccount = {
+                        println("Счет удален!")
+                        currentAccountBalance = "0 ₽"
+                    }
+                )
             }
         }
         AppBottomNavigationBar(navController = navController)

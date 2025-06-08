@@ -31,16 +31,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.fingid.domain.models.AccountInfoItem
 import com.example.fingid.ui.theme.Black
 import com.example.fingid.ui.theme.FinGidTheme
 import com.example.fingid.ui.theme.LightGreen
 import com.example.fingid.R
+import com.example.fingid.navigation.Screen
 import com.example.fingid.ui.theme.AppGreen
 import com.example.fingid.ui.theme.BrightOrange
 import com.example.fingid.ui.theme.DividerColor
 import com.example.fingid.ui.theme.LightGrey
 import com.example.fingid.ui.theme.White
+import com.example.fingid.utils.formatAsRuble
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -50,12 +54,15 @@ import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountScreen() {
+fun AccountScreen(
+    navController: NavController,
+    currentBalance: String
+) {
     val iconCircleBalanceBg = Color(0xFFFFF3E0)
     val currencyRowBackgroundColor = LightGreen
     val chartData = remember { mockFeb2025() }
 
-    val accountInfoItems = remember(currencyRowBackgroundColor) {
+    val accountInfoItems = remember(currencyRowBackgroundColor, currentBalance) {
         listOf(
             AccountInfoItem(
                 id = "balance",
@@ -63,7 +70,7 @@ fun AccountScreen() {
                 displayIcon = "💰",
                 displayIconColor = Black,
                 iconCircleBackgroundColor = iconCircleBalanceBg,
-                value = "-670 000 ₽",
+                value = currentBalance.formatAsRuble(),
                 valueColor = Black,
                 backgroundColor = LightGreen,
                 showArrow = true
@@ -91,7 +98,9 @@ fun AccountScreen() {
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
-                    IconButton(onClick = { /* TODO: Handle edit action */ }) {
+                    IconButton(onClick = {
+                        navController.navigate(Screen.EditAccount.createRoute(currentBalance))
+                    }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_pencil),
                             contentDescription = "Редактировать счет",
@@ -128,7 +137,13 @@ fun AccountScreen() {
                 .fillMaxSize()
         ) {
             accountInfoItems.forEach { item ->
-                AccountInfoRow(item = item, onClick = { /* TODO: Handle item click */ })
+                AccountInfoRow(item = item, onClick = {
+                    if (item.id == "balance") {
+                        navController.navigate(Screen.EditAccount.createRoute(item.value))
+                    } else if (item.id == "currency") {
+                        // TODO: Навигация для редактирования валюты
+                    }
+                })
                 if (item.id == "balance" && accountInfoItems.indexOf(item) < accountInfoItems.size -1) {
                     HorizontalDivider(
                         color = DividerColor,
@@ -298,7 +313,8 @@ fun BarChart(
 @Composable
 fun AccountScreenPreview() {
     FinGidTheme(darkTheme = false) {
-        AccountScreen()
+        val navController = rememberNavController()
+        AccountScreen(navController = navController, currentBalance = "-670 000 ₽")
     }
 }
 
