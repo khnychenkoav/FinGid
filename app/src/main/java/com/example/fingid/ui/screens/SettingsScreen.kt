@@ -36,7 +36,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.fingid.domain.models.SettingItem
+import com.example.fingid.ui.theme.Black
+import com.example.fingid.ui.theme.DividerColor
 import com.example.fingid.ui.theme.FinGidTheme
+import com.example.fingid.ui.theme.SwitchColor
+import com.example.fingid.ui.theme.SwitchTrackColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +76,7 @@ fun SettingsScreen() {
         ) {
             items(settingsItems) { item ->
                 SettingRow(item)
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
+                HorizontalDivider(color = DividerColor, thickness = 1.dp)
             }
         }
     }
@@ -90,7 +94,7 @@ fun SettingRow(item: SettingItem) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        Text(text = item.title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
+        Text(text = item.title, style = MaterialTheme.typography.bodyLarge, color = Black)
         Spacer(modifier = Modifier.weight(1f))
         if (item.hasSwitch) {
             Switch(
@@ -98,9 +102,9 @@ fun SettingRow(item: SettingItem) {
                 onCheckedChange = { checked = it },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.primary,
-                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    uncheckedThumbColor = SwitchColor,
                     checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    uncheckedTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    uncheckedTrackColor = SwitchTrackColor
                 )
             )
         } else {
@@ -128,7 +132,7 @@ fun SettingRowPreview() {
     FinGidTheme {
         Column {
             SettingRow(SettingItem(title = "Пункт без свича"))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
+            HorizontalDivider(color = DividerColor, thickness = 1.dp)
             SettingRow(SettingItem(title = "Пункт со свичем", hasSwitch = true, isSwitchEnabled = true))
         }
     }

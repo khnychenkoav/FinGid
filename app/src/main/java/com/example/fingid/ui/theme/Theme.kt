@@ -18,8 +18,8 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = Pink80,
     background = Color(0xFF1C1B1F),
     surface = Color(0xFF1C1B1F),
-    onBackground = Color(0xFFE6E1E5),
-    onSurface = Color(0xFFE6E1E5),
+    onBackground = LightGrey,
+    onSurface = LightGrey,
     primaryContainer = LightGreen
 
 )
@@ -31,8 +31,8 @@ private val LightColorScheme = lightColorScheme(
     tertiary = Pink40,
     background = Color(0xFFFFFBFE),
     surface = Color(0xFFFFFBFE),
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
+    onBackground = LightGrey,
+    onSurface = LightGrey,
     primaryContainer = LightGreen
 )
 

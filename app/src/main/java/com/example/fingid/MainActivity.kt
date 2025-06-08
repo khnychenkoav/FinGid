@@ -23,6 +23,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.fingid.navigation.Screen
 import com.example.fingid.ui.components.AppBottomNavigationBar
+import com.example.fingid.ui.screens.AccountScreen
+import com.example.fingid.ui.screens.ArticlesScreen
 import com.example.fingid.ui.screens.SettingsScreen
 import com.example.fingid.ui.theme.FinGidTheme
 
@@ -52,8 +54,12 @@ fun AppRoot() {
         ) {
             composable(Screen.Expenses.route) { SimpleScreenContent("Экран Расходов") }
             composable(Screen.Income.route) { SimpleScreenContent("Экран Доходов") }
-            composable(Screen.Account.route) { SimpleScreenContent("Экран Счета") }
-            composable(Screen.Articles.route) { SimpleScreenContent("Экран Статей") }
+            composable(Screen.Account.route) {
+                AccountScreen()
+            }
+            composable(Screen.Articles.route) {
+                ArticlesScreen()
+            }
             composable(Screen.Settings.route) {
                 SettingsScreen()
             }
