@@ -40,9 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.fingid.domain.models.IncomeEntryItem
+import com.example.fingid.navigation.Screen
 import com.example.fingid.ui.theme.DividerColor
 import com.example.fingid.ui.theme.FinGidTheme
 import com.example.fingid.ui.theme.LightGreen
+import com.example.fingid.ui.theme.LightGrey
 import com.example.fingid.ui.theme.White
 import com.example.fingid.utils.formatAsRuble
 
@@ -85,7 +87,7 @@ fun IncomeScreen(navController: NavController) {
                         Icon(
                             imageVector = Icons.Outlined.History,
                             contentDescription = "История доходов",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = LightGrey
                         )
                     }
                 }
@@ -93,8 +95,8 @@ fun IncomeScreen(navController: NavController) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: Handle FAB click - navigate to add income screen */
-                    println("FAB clicked on IncomeScreen")
+                onClick = {
+                    navController.navigate(Screen.AddEditIncome.createRoute(null))
                 },
                 modifier = Modifier.offset(y = 26.dp),
                 shape = CircleShape,
@@ -151,14 +153,14 @@ fun IncomeEntryRow(item: IncomeEntryItem, onClick: () -> Unit) {
         Text(
             text = item.categoryName,
             style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (item.isTotal) FontWeight.Bold else FontWeight.Normal,
+            fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurface
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = item.amount,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (item.isTotal) FontWeight.Bold else FontWeight.Normal,
+                fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurface
             )
             if (item.showArrow) {

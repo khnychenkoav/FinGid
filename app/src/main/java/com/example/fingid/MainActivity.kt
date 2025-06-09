@@ -30,8 +30,11 @@ import androidx.navigation.navArgument
 import com.example.fingid.navigation.Screen
 import com.example.fingid.ui.components.AppBottomNavigationBar
 import com.example.fingid.ui.screens.AccountScreen
+import com.example.fingid.ui.screens.AddEditExpenseScreen
+import com.example.fingid.ui.screens.AddEditIncomeScreen
 import com.example.fingid.ui.screens.ArticlesScreen
 import com.example.fingid.ui.screens.EditAccountScreen
+import com.example.fingid.ui.screens.ExpensesScreen
 import com.example.fingid.ui.screens.IncomeScreen
 import com.example.fingid.ui.screens.SettingsScreen
 import com.example.fingid.ui.theme.FinGidTheme
@@ -61,7 +64,9 @@ fun AppRoot() {
             startDestination = Screen.Settings.route,
             modifier = Modifier.weight(1f)
         ) {
-            composable(Screen.Expenses.route) { SimpleScreenContent("Экран Расходов") }
+            composable(Screen.Expenses.route) {
+                ExpensesScreen(navController = navController)
+            }
             composable(Screen.Income.route) {
                 IncomeScreen(navController = navController)
             }
@@ -93,6 +98,32 @@ fun AppRoot() {
                         println("Счет удален!")
                         currentAccountBalance = "0 ₽"
                     }
+                )
+            }
+            composable(
+                route = Screen.AddEditExpense.route,
+                arguments = listOf(navArgument("expenseId") {
+                    type = NavType.StringType
+                    nullable = true
+                })
+            ) { backStackEntry ->
+                val expenseId = backStackEntry.arguments?.getString("expenseId")
+                AddEditExpenseScreen(
+                    navController = navController,
+                    expenseId = if (expenseId == "new") null else expenseId
+                )
+            }
+            composable(
+                route = Screen.AddEditIncome.route,
+                arguments = listOf(navArgument("incomeId") {
+                    type = NavType.StringType
+                    nullable = true
+                })
+            ) { backStackEntry ->
+                val incomeId = backStackEntry.arguments?.getString("incomeId")
+                AddEditIncomeScreen(
+                    navController = navController,
+                    incomeId = if (incomeId == "new") null else incomeId
                 )
             }
         }
