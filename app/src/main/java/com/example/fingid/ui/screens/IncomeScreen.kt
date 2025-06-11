@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,6 +48,8 @@ import com.example.fingid.ui.theme.LightGreen
 import com.example.fingid.ui.theme.LightGrey
 import com.example.fingid.ui.theme.White
 import com.example.fingid.utils.formatAsRuble
+import com.example.fingid.R
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,7 +169,7 @@ fun IncomeEntryRow(item: IncomeEntryItem, onClick: () -> Unit) {
             if (item.showArrow) {
                 Spacer(modifier = Modifier.size(8.dp))
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    painter = painterResource(id = R.drawable.ic_more_vert),
                     contentDescription = "Подробнее",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.size(24.dp)

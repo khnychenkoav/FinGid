@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +34,7 @@ import com.example.fingid.ui.theme.FinGidTheme
 import com.example.fingid.ui.theme.LightGrey
 import com.example.fingid.ui.theme.White
 import com.example.fingid.utils.formatAsRuble
+import com.example.fingid.R
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -120,7 +122,9 @@ fun ExpensesScreen(navController: NavController) {
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
-                    IconButton(onClick = { /* TODO: Handle history click */ }) {
+                    IconButton(onClick = {
+                        navController.navigate(Screen.ExpensesHistory.route)
+                    }) {
                         Icon(
                             imageVector = Icons.Outlined.History,
                             contentDescription = "История расходов",
@@ -259,7 +263,7 @@ fun ExpenseEntryRow(item: ExpenseEntryItem, onClick: () -> Unit) {
             if (item.showArrow) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    painter = painterResource(id = R.drawable.ic_more_vert),
                     contentDescription = "Подробнее",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.size(24.dp)

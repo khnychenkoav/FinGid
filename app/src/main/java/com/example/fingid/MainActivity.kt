@@ -34,6 +34,7 @@ import com.example.fingid.ui.screens.AddEditExpenseScreen
 import com.example.fingid.ui.screens.AddEditIncomeScreen
 import com.example.fingid.ui.screens.ArticlesScreen
 import com.example.fingid.ui.screens.EditAccountScreen
+import com.example.fingid.ui.screens.ExpensesHistoryScreen
 import com.example.fingid.ui.screens.ExpensesScreen
 import com.example.fingid.ui.screens.IncomeScreen
 import com.example.fingid.ui.screens.SettingsScreen
@@ -126,6 +127,10 @@ fun AppRoot() {
                     incomeId = if (incomeId == "new") null else incomeId
                 )
             }
+            composable(Screen.ExpensesHistory.route) {
+                ExpensesHistoryScreen(navController)
+            }
+
         }
         AppBottomNavigationBar(navController = navController)
     }
