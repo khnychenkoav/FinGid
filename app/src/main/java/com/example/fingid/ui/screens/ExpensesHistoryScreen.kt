@@ -54,7 +54,7 @@ fun ExpensesHistoryScreen(navController: NavController) {
                 title = { Text("Моя история", style = MaterialTheme.typography.titleLarge) },
                 actions = {
                     IconButton(onClick = {
-                        navController.navigate("analysis_screen")
+                        navController.navigate("expenses_analysis_screen")
                     }) {
                         Icon(painter = painterResource(R.drawable.ic_trailng_clock), contentDescription = "Фильтр по периоду", tint = LightGrey, modifier = Modifier.size(48.dp))
                     }

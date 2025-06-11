@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
 
 sealed class BottomNavItem(
     val screen: Screen,
@@ -86,7 +87,7 @@ fun AppBottomNavigationBar(navController: NavController) {
         windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)
     ) {
         items.forEach { item ->
-            val selected = currentRoute == item.screen.route
+            val selected = navBackStackEntry.isInSection(item.screen)
             NavigationBarItem(
                 selected = selected,
                 onClick = {
@@ -113,5 +114,18 @@ fun AppBottomNavigationBar(navController: NavController) {
                 )
             )
         }
+    }
+}
+
+
+private fun NavBackStackEntry?.isInSection(section: Screen): Boolean {
+    val route = this?.destination?.route ?: return false
+    return when (section) {
+        Screen.Expenses -> route.startsWith("expenses")
+        Screen.Income   -> route.startsWith("income")
+        Screen.Account  -> route.startsWith("account")
+        Screen.Articles -> route.startsWith("articles")
+        Screen.Settings -> route.startsWith("settings")
+        else            -> false
     }
 }
