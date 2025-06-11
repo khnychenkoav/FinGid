@@ -38,6 +38,7 @@ import com.example.fingid.ui.screens.ExpensesHistoryScreen
 import com.example.fingid.ui.screens.ExpensesScreen
 import com.example.fingid.ui.screens.IncomeScreen
 import com.example.fingid.ui.screens.SettingsScreen
+import com.example.fingid.ui.screens.AnalysisScreen
 import com.example.fingid.ui.theme.FinGidTheme
 
 class MainActivity : ComponentActivity() {
@@ -130,7 +131,9 @@ fun AppRoot() {
             composable(Screen.ExpensesHistory.route) {
                 ExpensesHistoryScreen(navController)
             }
-
+            composable(Screen.Analysis.route) {
+                AnalysisScreen(navController = navController)
+            }
         }
         AppBottomNavigationBar(navController = navController)
     }
