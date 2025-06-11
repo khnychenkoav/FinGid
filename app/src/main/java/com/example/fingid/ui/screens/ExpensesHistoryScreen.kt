@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.example.fingid.R
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -55,7 +54,7 @@ fun ExpensesHistoryScreen(navController: NavController) {
                 title = { Text("Моя история", style = MaterialTheme.typography.titleLarge) },
                 actions = {
                     IconButton(onClick = { /* TODO: открыть фильтр по дате */ }) {
-                        Icon(Icons.Default.CalendarToday, contentDescription = "Фильтр по периоду", tint = LightGrey)
+                        Icon(painter = painterResource(R.drawable.ic_trailng_clock), contentDescription = "Фильтр по периоду", tint = LightGrey, modifier = Modifier.size(48.dp))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
