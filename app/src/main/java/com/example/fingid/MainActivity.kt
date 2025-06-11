@@ -40,9 +40,21 @@ import com.example.fingid.ui.screens.IncomeScreen
 import com.example.fingid.ui.screens.SettingsScreen
 import com.example.fingid.ui.screens.AnalysisScreen
 import com.example.fingid.ui.theme.FinGidTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen().apply {
+            setOnExitAnimationListener { splash ->
+                splash.iconView.animate()
+                    .translationY(-splash.iconView.height.toFloat())
+                    .alpha(0f)
+                    .setDuration(500)
+                    .withEndAction { splash.remove() }
+                    .start()
+            }
+        }
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
