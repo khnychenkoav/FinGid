@@ -11,6 +11,9 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,15 +22,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.fingid.ui.theme.Black
 import com.example.fingid.ui.theme.DividerColor
 import com.example.fingid.ui.theme.EditProfileBackgroundColor
 import com.example.fingid.ui.theme.FinGidTheme
+import com.example.fingid.ui.theme.LightGreen
 import com.example.fingid.ui.theme.LightGrey
 import com.example.fingid.ui.theme.Red
 import com.example.fingid.ui.theme.White
 import com.example.fingid.utils.ThousandsRubleTransformation
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +58,55 @@ fun AddEditExpenseScreen(
     var comment by remember { mutableStateOf(if (isEditing) "Ремонт - фурнитура для дверей" else "") }
 
     // TODO: Загрузить данные расхода, если isEditing == true
+
+    var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    val initialDateMillis = remember {
+        if (isEditing) {
+            try {
+                LocalDate.parse("25.02.2025", DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                    .atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            } catch (e: DateTimeParseException) {
+                System.currentTimeMillis()
+            }
+        } else {
+            System.currentTimeMillis()
+        }
+    }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDateMillis,
+        initialDisplayMode = DisplayMode.Picker,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return true
+            }
+        }
+    )
+    val selectedDate = datePickerState.selectedDateMillis?.let {
+        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+    }
+
+    var showTimePicker by rememberSaveable { mutableStateOf(false) }
+    val initialTime = remember {
+        if (isEditing) {
+            try {
+                LocalTime.parse("23:41", DateTimeFormatter.ofPattern("HH:mm"))
+            } catch (e: DateTimeParseException) {
+                LocalTime.now()
+            }
+        } else {
+            LocalTime.now()
+        }
+    }
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialTime.hour,
+        initialMinute = initialTime.minute,
+        is24Hour = true
+    )
+    val selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+
+
+    val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     Scaffold(
         topBar = {
@@ -113,19 +174,17 @@ fun AddEditExpenseScreen(
             )
             HorizontalDivider(color = DividerColor)
 
-            FormInputRowExpense( // TODO: Заменить на DatePicker
+            FormRowExpense(
                 label = "Дата",
-                value = date,
-                onValueChange = { date = it },
-                placeholderText = "дд.мм.гггг"
+                value = selectedDate?.format(dateFormatter) ?: "Выберите дату",
+                onClick = { showDatePicker = true }
             )
             HorizontalDivider(color = DividerColor)
 
-            FormInputRowExpense( // TODO: Заменить на TimePicker
+            FormRowExpense(
                 label = "Время",
-                value = time,
-                onValueChange = { time = it },
-                placeholderText = "чч:мм"
+                value = selectedTime.format(timeFormatter),
+                onClick = { showTimePicker = true }
             )
             HorizontalDivider(color = DividerColor)
 
@@ -172,6 +231,94 @@ fun AddEditExpenseScreen(
                 )
             ) {
                 Text("Удалить расход", style = MaterialTheme.typography.bodyLarge, fontSize = 14.sp)
+            }
+
+            if (showDatePicker) {
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    colors = DatePickerDefaults.colors(
+                        containerColor = LightGreen
+                    ),
+                    confirmButton = {
+                        TextButton(
+                            onClick = { showDatePicker = false },
+                            colors = ButtonDefaults.textButtonColors(contentColor = Black)
+                        ) {
+                            Text("OK")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showDatePicker = false },
+                            colors = ButtonDefaults.textButtonColors(contentColor = Black)
+                        ) {
+                            Text("Cancel")
+                        }
+                    }
+
+                ) {
+                    DatePicker(
+                        state = datePickerState,
+                        title = null,
+                        headline = null,
+                        colors = DatePickerDefaults.colors(
+                            containerColor = LightGreen,
+                            selectedDayContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
+                            todayDateBorderColor = Color.Transparent,
+                            todayContentColor = MaterialTheme.colorScheme.primary,
+                            dayContentColor = MaterialTheme.colorScheme.onSurface,
+                            disabledDayContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            weekdayContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            navigationContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            yearContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            currentYearContentColor = MaterialTheme.colorScheme.primary,
+                            selectedYearContentColor = MaterialTheme.colorScheme.onPrimary,
+                            selectedYearContainerColor = MaterialTheme.colorScheme.primary,
+                            subheadContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        showModeToggle = false
+                    )
+                }
+            }
+
+            if (showTimePicker) {
+                Dialog(onDismissRequest = { showTimePicker = false }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                        colors = CardDefaults.cardColors(containerColor = LightGreen),
+                        shape = RoundedCornerShape(16.dp),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Выберите время", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.height(20.dp))
+                            TimePicker(
+                                state = timePickerState,
+                                layoutType = TimePickerLayoutType.Vertical
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                TextButton(onClick = { showTimePicker = false }) {
+                                    Text("Отмена")
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                TextButton(onClick = {
+                                    showTimePicker = false
+                                }) {
+                                    Text("OK")
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
