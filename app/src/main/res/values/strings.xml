@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">FinGid</string>
+    <string name="bottom_nav_expenses">Расходы</string>
+    <string name="bottom_nav_income">Доходы</string>
+    <string name="bottom_nav_account">Счет</string>
+    <string name="bottom_nav_articles">Статьи</string>
+    <string name="bottom_nav_settings">Настройки</string>
+</resources>
