@@ -17,7 +17,7 @@ private fun formatDigits(digits: String): String {
 }
 
 
-class ThousandsRubleTransformation : VisualTransformation {
+class ThousandsRubleTransformation(private val currencySymbol: String = "₽") : VisualTransformation {
 
     override fun filter(text: AnnotatedString): TransformedText {
         val raw       = text.text
@@ -28,7 +28,7 @@ class ThousandsRubleTransformation : VisualTransformation {
         val formatted = buildString {
             if (hasSign) append('-')
             append(digitsFmt)
-            if (digitsFmt.isNotEmpty()) append(' ').append('₽')
+            if (digitsFmt.isNotEmpty()) append(' ').append(currencySymbol)
         }
 
         val originalToTrans = IntArray(raw.length + 1)

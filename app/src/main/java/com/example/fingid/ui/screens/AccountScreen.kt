@@ -1,11 +1,11 @@
 package com.example.fingid.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -14,10 +14,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +26,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -37,59 +38,107 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.fingid.domain.models.AccountInfoItem
-import com.example.fingid.ui.theme.Black
-import com.example.fingid.ui.theme.FinGidTheme
-import com.example.fingid.ui.theme.LightGreen
 import com.example.fingid.R
+import com.example.fingid.domain.entities.Account // Убедитесь, что этот импорт есть
+import com.example.fingid.domain.models.AccountInfoItem
 import com.example.fingid.navigation.Screen
 import com.example.fingid.ui.components.CurrencyBottomSheet
-import com.example.fingid.ui.theme.AppGreen
-import com.example.fingid.ui.theme.BrightOrange
-import com.example.fingid.ui.theme.DividerColor
-import com.example.fingid.ui.theme.LightGrey
-import com.example.fingid.ui.theme.White
+import com.example.fingid.ui.theme.*
 import com.example.fingid.utils.formatAsRuble
+import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlin.math.min
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
     navController: NavController,
-    currentBalance: String
+    viewModel: AccountViewModel
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
     val iconCircleBalanceBg = Color(0xFFFFF3E0)
     val currencyRowBackgroundColor = LightGreen
     val chartData = remember { mockFeb2025() }
-    var selectedCurrencySymbol by remember { mutableStateOf("₽") }
+    var selectedCurrencySymbolForBottomSheet by remember { mutableStateOf("₽") }
     val currencySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showCurrencyBottomSheet by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
 
-    val accountInfoItems = remember(currencyRowBackgroundColor, currentBalance) {
+    when (val state = uiState) {
+        is AccountUiState.Loading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+        is AccountUiState.Error -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Ошибка: ${state.message}")
+            }
+            LaunchedEffect(state.message) {
+                Toast.makeText(context, "Ошибка загрузки: ${state.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+        is AccountUiState.Success -> {
+            val account = state.account
+            AccountScreenContent(
+                navController = navController,
+                account = account,
+                chartData = chartData,
+                selectedCurrencySymbolForBottomSheet = selectedCurrencySymbolForBottomSheet,
+                onCurrencySymbolForBottomSheetChange = { selectedCurrencySymbolForBottomSheet = it },
+                iconCircleBalanceBg = iconCircleBalanceBg,
+                currencyRowBackgroundColor = currencyRowBackgroundColor,
+                showCurrencyBottomSheet = showCurrencyBottomSheet,
+                onShowCurrencyBottomSheetChange = { showCurrencyBottomSheet = it },
+                currencySheetState = currencySheetState
+            )
+        }
+        AccountUiState.Idle -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Загрузка данных счета...")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AccountScreenContent(
+    navController: NavController,
+    account: Account,
+    chartData: List<BarEntry>,
+    selectedCurrencySymbolForBottomSheet: String,
+    onCurrencySymbolForBottomSheetChange: (String) -> Unit,
+    iconCircleBalanceBg: Color,
+    currencyRowBackgroundColor: Color,
+    showCurrencyBottomSheet: Boolean,
+    onShowCurrencyBottomSheetChange: (Boolean) -> Unit,
+    currencySheetState: SheetState
+) {
+    val accountInfoItems = remember(account, selectedCurrencySymbolForBottomSheet, currencyRowBackgroundColor) {
         listOf(
             AccountInfoItem(
                 id = "balance",
-                title = "Баланс",
+                title = "Баланс (${account.name})",
                 displayIcon = "💰",
                 displayIconColor = Black,
                 iconCircleBackgroundColor = iconCircleBalanceBg,
-                value = currentBalance.formatAsRuble(selectedCurrencySymbol),
+                value = account.balance.toPlainString().formatAsRuble(account.currency),
                 valueColor = Black,
                 backgroundColor = LightGreen,
                 showArrow = true
             ),
             AccountInfoItem(
                 id = "currency",
-                title = "Валюта",
+                title = "Валюта счета",
                 displayIcon = null,
                 iconCircleBackgroundColor = null,
-                value = selectedCurrencySymbol,
+                value = account.currency,
                 valueColor = Black,
                 backgroundColor = currencyRowBackgroundColor,
                 showArrow = true
@@ -101,14 +150,19 @@ fun AccountScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Мой счет", style = MaterialTheme.typography.titleLarge) },
+                title = { Text(account.name, style = MaterialTheme.typography.titleLarge) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
                     IconButton(onClick = {
-                        navController.navigate(Screen.EditAccount.createRoute(currentBalance.replace(Regex("[^0-9.-]"), "")))
+                        navController.navigate(
+                            Screen.EditAccount.createRoute(
+                                accountId = account.id,
+                                balanceValue = account.balance.toPlainString()
+                            )
+                        )
                     }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_pencil),
@@ -121,7 +175,7 @@ fun AccountScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: Handle FAB click */ },
+                onClick = { /* TODO: Handle FAB click - Add Transaction for this account */ },
                 modifier = Modifier.offset(y = 26.dp),
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -148,9 +202,14 @@ fun AccountScreen(
             accountInfoItems.forEach { item ->
                 AccountInfoRow(item = item, onClick = {
                     if (item.id == "balance") {
-                        navController.navigate(Screen.EditAccount.createRoute(item.value))
+                        navController.navigate(
+                            Screen.EditAccount.createRoute(
+                                accountId = account.id,
+                                balanceValue = account.balance.toPlainString()
+                            )
+                        )
                     } else if (item.id == "currency") {
-                        showCurrencyBottomSheet = true
+                        onShowCurrencyBottomSheetChange(true)
                     }
                 })
                 if (item.id == "balance" && accountInfoItems.indexOf(item) < accountInfoItems.size -1) {
@@ -174,10 +233,12 @@ fun AccountScreen(
         if (showCurrencyBottomSheet) {
             CurrencyBottomSheet(
                 sheetState = currencySheetState,
-                onDismiss = { showCurrencyBottomSheet = false },
+                onDismiss = { onShowCurrencyBottomSheetChange(false) },
                 onCurrencySelected = { currency ->
-                    selectedCurrencySymbol = currency.symbol
-                    println("Выбрана валюта: ${currency.name}")
+                    // TODO: Implement actual currency update via ViewModel
+                    onCurrencySymbolForBottomSheetChange(currency.symbol)
+                    println("Выбрана валюта для отображения (не сохранено): ${currency.name}")
+                    onShowCurrencyBottomSheetChange(false)
                 }
             )
         }
@@ -267,7 +328,7 @@ fun BarChart(
 
     val density = LocalDensity.current
     val maxBarWidthPx = with(density) { maxBarWidthDp.toPx() }
-    val maxAbs = entries.maxOf { abs(it.value) }.coerceAtLeast(1f)
+    val maxAbs = entries.maxOfOrNull { abs(it.value) }?.coerceAtLeast(1f) ?: 1f
     val midDate = month.atDay((entries.size + 1) / 2)
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd.MM") }
 
@@ -304,9 +365,7 @@ fun BarChart(
                 )
             }
         }
-
         Spacer(Modifier.height(4.dp))
-
         Row(
             Modifier
                 .fillMaxWidth()
@@ -328,13 +387,41 @@ fun BarChart(
 }
 
 
+fun mockFeb2025(): List<BarEntry> = listOf(
+    10, 15, 45, 40, 80, -55, 55,
+    11, 210, -132, 11, 250, 42, 190,
+    89, -20, -15, -66, 60, 65, 22,
+    70, -22, -15, 16, 80, 19, 95
+).mapIndexed { i, v ->
+    BarEntry(LocalDate.of(2025, 2, i + 1), v.toFloat())
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AccountScreenPreview() {
     FinGidTheme(darkTheme = false) {
         val navController = rememberNavController()
-        AccountScreen(navController = navController, currentBalance = "-670 000 ₽")
+        val mockAccount = Account(
+            id = 1L,
+            name = "Тестовый Счет Preview",
+            balance = BigDecimal("-670000.50"),
+            currency = "RUB",
+            createdAt = OffsetDateTime.now(),
+            updatedAt = OffsetDateTime.now()
+        )
+        AccountScreenContent(
+            navController = navController,
+            account = mockAccount,
+            chartData = mockFeb2025(),
+            selectedCurrencySymbolForBottomSheet = "₽",
+            onCurrencySymbolForBottomSheetChange = {},
+            iconCircleBalanceBg = Color(0xFFFFF3E0),
+            currencyRowBackgroundColor = LightGreen,
+            showCurrencyBottomSheet = false,
+            onShowCurrencyBottomSheetChange = {},
+            currencySheetState = rememberModalBottomSheetState()
+        )
     }
 }
 
@@ -388,13 +475,4 @@ fun AccountInfoRowPreview() {
             )
         }
     }
-}
-
-fun mockFeb2025(): List<BarEntry> = listOf(
-    10,  15,  45,  40,  80,  -55,  55,
-    11,  210,  -132,   11, 250,  42, 190,
-    89, -20, -15,  -66,  60,  65,  22,
-    70,  -22,  -15,   16,  80,  19,  95
-).mapIndexed { i, v ->
-    BarEntry(LocalDate.of(2025, 2, i + 1), v.toFloat())
 }

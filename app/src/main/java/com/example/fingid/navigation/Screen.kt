@@ -3,11 +3,14 @@ package com.example.fingid.navigation
 sealed class Screen(val route: String) {
     object Expenses : Screen("expenses_screen")
     object Income : Screen("income_screen")
-    object Account : Screen("account_screen")
+    object Account : Screen("account_screen/{accountId}") {
+        fun createRoute(accountId: Long) = "account_screen/$accountId"
+    }
     object Articles : Screen("articles_screen")
     object Settings : Screen("settings_screen")
-    object EditAccount : Screen("account_edit_screen/{balanceValue}") {
-        fun createRoute(balanceValue: String) = "account_edit_screen/$balanceValue"
+    object EditAccount : Screen("account_edit_screen?accountId={accountId}&balanceValue={balanceValue}") {
+        fun createRoute(accountId: Long? = null, balanceValue: String) =
+            "account_edit_screen?accountId=${accountId?.toString() ?: "new"}&balanceValue=$balanceValue"
     }
     object AddEditExpense : Screen("expenses_add_edit_expense_screen/{expenseId}") {
         fun createRoute(expenseId: String?) = "expenses_add_edit_expense_screen/${expenseId ?: "new"}"
