@@ -143,8 +143,16 @@ fun AppRoot() {
             composable(Screen.ExpensesHistory.route) {
                 ExpensesHistoryScreen(navController)
             }
-            composable(Screen.Analysis.route) {
-                AnalysisScreen(navController = navController)
+            composable(
+                route = Screen.Analysis.route,
+                arguments = listOf(
+                    navArgument("start") { type = NavType.StringType },
+                    navArgument("end")   { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val start = backStackEntry.arguments?.getString("start") ?: ""
+                val end   = backStackEntry.arguments?.getString("end")   ?: ""
+                AnalysisScreen(navController = navController, startLabel = start, endLabel = end)
             }
         }
         AppBottomNavigationBar(navController = navController)

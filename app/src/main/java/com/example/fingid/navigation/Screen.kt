@@ -16,5 +16,8 @@ sealed class Screen(val route: String) {
         fun createRoute(incomeId: String?) = "income_add_edit_income_screen/${incomeId ?: "new"}"
     }
     object ExpensesHistory : Screen("expenses_history_screen")
-    object Analysis : Screen("expenses_analysis_screen")
+    object Analysis : Screen("expenses_analysis_screen/{start}/{end}") {
+        fun createRoute(start: String, end: String) =
+            "expenses_analysis_screen/$start/$end"
+    }
 }
