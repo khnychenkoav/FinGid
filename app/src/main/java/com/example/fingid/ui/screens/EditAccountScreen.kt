@@ -28,7 +28,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.fingid.R
 import com.example.fingid.ui.commonitems.UiState
-import com.example.fingid.ui.theme.*
+import com.example.fingid.ui.theme.EditProfileBackgroundColor
+import com.example.fingid.ui.theme.FinGidTheme
+import com.example.fingid.ui.theme.LightGrey
+import com.example.fingid.ui.theme.Red
+import com.example.fingid.ui.theme.White
 import com.example.fingid.utils.ThousandsRubleTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,6 +47,7 @@ fun EditAccountScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val accountDetails by viewModel.accountDetails.collectAsState()
+
     var accountName by remember { mutableStateOf("") }
     var balance by remember { mutableStateOf("") }
     var currency by remember { mutableStateOf("RUB") }
@@ -53,6 +58,7 @@ fun EditAccountScreen(
             balance = acc.balance.toString()
             currency = acc.currency
         } ?: run {
+            accountName = ""
             balance = initialBalance.replace(Regex("[^0-9.-]"), "").ifEmpty { "0" }
         }
     }
@@ -60,19 +66,18 @@ fun EditAccountScreen(
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is UiState.Success -> {
-                (state.data as? String)?.let {
-                    if (it.contains("сохранен") || it.contains("удален")) {
-                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-                        viewModel.resetState()
-                        navController.popBackStack()
-                    }
+                val message = state.data
+                if (message == "Счет сохранен" || message == "Счет удален (имитация)") {
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    viewModel.resetState()
+                    navController.popBackStack()
                 }
             }
             is UiState.Error -> {
                 Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
                 viewModel.resetState()
             }
-            is UiState.Loading -> { }
+            is UiState.Loading -> {}
         }
     }
 
@@ -114,6 +119,7 @@ fun EditAccountScreen(
                 .fillMaxSize()
                 .background(EditProfileBackgroundColor)
         ) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().background(White).height(56.dp)
@@ -162,7 +168,7 @@ fun EditAccountScreen(
                         }
                     },
                     singleLine  = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     visualTransformation = ThousandsRubleTransformation(currency),
                     textStyle   = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.End),
 

@@ -4,18 +4,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.fingid.data.repository.RepositoryProvider
 import com.example.fingid.domain.usecase.account.GetAccountUseCase
-import com.example.fingid.domain.usecase.account.UpdateAccountsUseCase
+import com.example.fingid.domain.usecase.transaction.GetTransactionsUseCase
 
-class EditAccountViewModelFactory(private val accountId: Long?) : ViewModelProvider.Factory {
+class ExpensesScreenViewModelFactory : ViewModelProvider.Factory {
+    private val transactionRepository by lazy { RepositoryProvider.getTransactionRepository() }
     private val accountRepository by lazy { RepositoryProvider.getAccountRepository() }
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(EditAccountViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(ExpensesScreenViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return EditAccountViewModel(
-                accountIdToEdit = accountId,
-                getAccountUseCase = GetAccountUseCase(accountRepository),
-                updateAccountsUseCase = UpdateAccountsUseCase(accountRepository)
+            return ExpensesScreenViewModel(
+                getTransactionsUseCase = GetTransactionsUseCase(transactionRepository),
+                getAccountUseCase = GetAccountUseCase(accountRepository)
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
