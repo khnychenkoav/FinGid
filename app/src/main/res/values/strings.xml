@@ -1,8 +1,53 @@
 <resources>
     <string name="app_name">FinGid</string>
+
+    <!-- Bottom Navigation -->
     <string name="bottom_nav_expenses">Расходы</string>
     <string name="bottom_nav_income">Доходы</string>
     <string name="bottom_nav_account">Счет</string>
     <string name="bottom_nav_articles">Статьи</string>
     <string name="bottom_nav_settings">Настройки</string>
+
+    <!-- Top Bar Titles -->
+    <string name="expenses_today">Расходы сегодня</string>
+    <string name="income_today">Доходы сегодня</string>
+    <string name="my_account">Мой счет</string>
+    <string name="my_articles">Мои статьи</string>
+    <string name="my_history">Моя история</string>
+    <string name="settings">Настройки</string>
+
+    <!-- Settings Screen -->
+    <string name="dark_theme">Темная тема</string>
+    <string name="main_color">Основной цвет</string>
+    <string name="sounds">Звуки</string>
+    <string name="haptics">Хаптики</string>
+    <string name="password">Код пароль</string>
+    <string name="synchronizing">Синхронизация</string>
+    <string name="language">Язык</string>
+    <string name="about_the_program">О программе</string>
+
+    <!-- History Screen -->
+    <string name="start">Начало</string>
+    <string name="end">Конец</string>
+    <string name="sum">Сумма</string>
+
+    <!-- Common -->
+    <string name="total">Всего</string>
+    <string name="price">"%s ₽"</string>
+    <string name="currency">Валюта</string>
+    <string name="balance">Баланс</string>
+    <string name="find_article">Найти статью</string>
+    <string name="add_expense">Добавить расход</string>
+    <string name="retry">Повторить</string>
+    <string name="loading">Загрузка</string>
+    <string name="money_icon">💰</string>
+
+    <!-- Errors -->
+    <string name="error">Произошла ошибка</string>
+    <string name="no_accounts">Нет доступных аккаунтов</string>
+    <string name="unknown_error">Неизвестная ошибка</string>
+    <string name="no_internet_connection">Отсутствует подключение к интернету</string>
+    <string name="network_error">Ошибка сети</string>
+    <string name="server_error">Ошибка сервера</string>
+
 </resources>

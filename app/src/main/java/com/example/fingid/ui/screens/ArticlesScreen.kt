@@ -2,6 +2,8 @@ package com.example.fingid.ui.screens
 
 import android.icu.lang.UCharacter
 import android.icu.lang.UProperty
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,34 +24,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.fingid.domain.models.ArticleItem
+import com.example.fingid.domain.model.Category
 import com.example.fingid.ui.theme.Black
 import com.example.fingid.ui.theme.DividerColor
 import com.example.fingid.ui.theme.FinGidTheme
 import com.example.fingid.ui.theme.LightGreen
 import com.example.fingid.ui.theme.SearchBackgroundColor
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ArticlesScreen() {
+fun ArticlesScreen(
+    // В будущем сюда будет приходить ViewModel
+) {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
 
-    val articles = remember {
-        listOf(
-            ArticleItem("1", "Аренда квартиры", "\uD83C\uDFE1", LightGreen),
-            ArticleItem("2", "Одежда", "👗", LightGreen),
-            ArticleItem("3", "На собачку", "🐶", LightGreen),
-            ArticleItem("4", "На собачку", "🐶", LightGreen),
-            ArticleItem("5", "Ремонт квартиры", null, LightGreen),
-            ArticleItem("6", "Продукты", "\uD83C\uDF6D", LightGreen),
-            ArticleItem("7", "Спортзал", "🏋️", LightGreen),
-            ArticleItem("8", "Медицина", "💊", LightGreen),
-        )
+    // TODO: Этот список нужно будет получать из ViewModel
+    val categories = remember {
+        sampleCategories()
     }
 
-    val filteredArticles = articles.filter {
-        it.title.contains(searchQuery.text, ignoreCase = true)
+    val filteredCategories = categories.filter {
+        it.textLeading.contains(searchQuery.text, ignoreCase = true)
     }
 
     Scaffold(
@@ -100,8 +95,8 @@ fun ArticlesScreen() {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(filteredArticles, key = { it.id }) { article ->
-                    ArticleRow(article = article)
+                items(filteredCategories, key = { it.id }) { category ->
+                    ArticleRow(category = category)
                     HorizontalDivider(
                         color = DividerColor,
                         thickness = 1.dp,
@@ -113,7 +108,7 @@ fun ArticlesScreen() {
 }
 
 @Composable
-fun ArticleRow(article: ArticleItem) {
+fun ArticleRow(category: Category) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,13 +120,13 @@ fun ArticleRow(article: ArticleItem) {
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(article.iconBackgroundColor),
+                .background(LightGreen),
             contentAlignment = Alignment.Center
         ) {
-            val displayText = if (!article.emojiOrIconCode.isNullOrEmpty()) {
-                article.emojiOrIconCode
+            val displayText = if (isEmoji(category.iconLeading)) {
+                category.iconLeading
             } else {
-                article.title
+                category.textLeading
                     .split(' ')
                     .filter { it.isNotBlank() }
                     .take(2)
@@ -152,15 +147,14 @@ fun ArticleRow(article: ArticleItem) {
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(
-            text = article.title,
+            text = category.textLeading,
             style = MaterialTheme.typography.bodyLarge,
             color = Black
         )
     }
 }
 
-
-
+@RequiresApi(Build.VERSION_CODES.P)
 fun isEmoji(text: String): Boolean {
     if (text.isEmpty()) return false
     val codePoints = text.codePoints().toArray()
@@ -169,6 +163,19 @@ fun isEmoji(text: String): Boolean {
                 || cp == 0x200D
                 || cp == 0xFE0F
     }
+}
+
+private fun sampleCategories(): List<Category> {
+    return listOf(
+        Category(1, "🏠", "Аренда квартиры", false),
+        Category(2, "👗", "Одежда", false),
+        Category(3, "🐶", "На собачку", false),
+        Category(4, "🐶", "На собачку", false),
+        Category(5, "РК", "Ремонт квартиры", false),
+        Category(6, "🍭", "Продукты", false),
+        Category(7, "🏋️", "Спортзал", false),
+        Category(8, "💊", "Медицина", false),
+    )
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
@@ -184,9 +191,9 @@ fun ArticlesScreenPreview() {
 fun ArticleRowPreview() {
     FinGidTheme(darkTheme = false) {
         Column {
-            ArticleRow(ArticleItem("1", "Аренда квартиры", "🏠", LightGreen))
-            ArticleRow(ArticleItem("2", "Ремонт Машины", null, LightGreen))
-            ArticleRow(ArticleItem("3", "Еда", "🍕", LightGreen))
+            ArticleRow(Category(1, "🏠", "Аренда квартиры", false))
+            ArticleRow(Category(2, "РМ", "Ремонт Машины", false))
+            ArticleRow(Category(3, "🍕", "Еда", false))
         }
     }
 }

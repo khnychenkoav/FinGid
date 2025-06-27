@@ -18,9 +18,28 @@ sealed class Screen(val route: String) {
     object AddEditIncome : Screen("income_add_edit_income_screen/{incomeId}") {
         fun createRoute(incomeId: String?) = "income_add_edit_income_screen/${incomeId ?: "new"}"
     }
-    object ExpensesHistory : Screen("expenses_history_screen")
+    object History : Screen("history/{isIncome}") {
+        fun createRoute(isIncome: Boolean) = "history/$isIncome"
+    }
     object Analysis : Screen("expenses_analysis_screen/{start}/{end}") {
         fun createRoute(start: String, end: String) =
             "expenses_analysis_screen/$start/$end"
+    }
+    companion object {
+        fun getTitleByRoute(route: String): String {
+            return when (route) {
+                Expenses.route -> "Расходы сегодня"
+                Income.route -> "Доходы сегодня"
+                Account.route -> "Мой счет"
+                Articles.route -> "Мои статьи"
+                Settings.route -> "Настройки"
+                History.route -> "История расходов"
+                else -> ""
+            }
+        }
+
+        fun needShowTopBar(route: String): Boolean {
+            return false
+        }
     }
 }

@@ -1,51 +1,49 @@
 package com.example.fingid.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fingid.data.repository.FinanceRepository
-import com.example.fingid.data.repository.NetworkResult
-import com.example.fingid.domain.entities.Account
+import com.example.fingid.domain.model.Account
+import com.example.fingid.domain.usecase.account.GetAccountUseCase
+import com.example.fingid.ui.commonitems.UiState
+import com.example.fingid.ui.commonitems.isNetworkAvailable
+import com.example.fingid.ui.commonitems.retryWithBackoff
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-sealed class AccountUiState {
-    object Loading : AccountUiState()
-    data class Success(val account: Account) : AccountUiState()
-    data class Error(val message: String) : AccountUiState()
-    object Idle : AccountUiState()
-}
 
 class AccountViewModel(
-    private val accountId: Long,
-    private val repository: FinanceRepository = FinanceRepository()
+    private val getAccountUseCase: GetAccountUseCase,
+    private val accountId: Long
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Idle)
-    val uiState: StateFlow<AccountUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<UiState<Account>>(UiState.Loading)
+    val uiState: StateFlow<UiState<Account>> = _uiState
 
-    init {
-        if (accountId != 0L && accountId != -1L) {
-            fetchAccountDetails()
-        } else {
-            _uiState.value = AccountUiState.Error("Неверный ID счета для загрузки.")
-        }
-    }
-
-    fun fetchAccountDetails() {
+    fun fetchAccountDetails(context: Context) {
         viewModelScope.launch {
-            _uiState.value = AccountUiState.Loading
-            when (val result = repository.getAccount(accountId)) {
-                is NetworkResult.Success -> {
-                    _uiState.value = AccountUiState.Success(result.data)
+            _uiState.value = UiState.Loading
+            if (!isNetworkAvailable(context)) {
+                _uiState.value = UiState.Error("Отсутствует подключение к интернету")
+                return@launch
+            }
+            try {
+                val accounts = withContext(Dispatchers.IO) {
+                    retryWithBackoff { getAccountUseCase() }
                 }
-                is NetworkResult.Error -> {
-                    _uiState.value = AccountUiState.Error(result.message)
+                val account = accounts.find { it.id.toLong() == accountId }
+                if (account != null) {
+                    _uiState.value = UiState.Success(account)
+                } else {
+                    _uiState.value = UiState.Error("Счет с ID $accountId не найден")
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = UiState.Error(e.message ?: "Неизвестная ошибка")
             }
         }
     }
-
-    // TODO: добавить методы для загрузки данных для графика,
 }

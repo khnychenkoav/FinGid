@@ -27,13 +27,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.fingid.R
+import com.example.fingid.ui.commonitems.UiState
 import com.example.fingid.ui.theme.EditProfileBackgroundColor
 import com.example.fingid.ui.theme.FinGidTheme
 import com.example.fingid.ui.theme.LightGrey
 import com.example.fingid.ui.theme.Red
 import com.example.fingid.ui.theme.White
 import com.example.fingid.utils.ThousandsRubleTransformation
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +47,7 @@ fun EditAccountScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val accountDetails by viewModel.accountDetails.collectAsState()
+
     var accountName by remember { mutableStateOf("") }
     var balance by remember { mutableStateOf("") }
     var currency by remember { mutableStateOf("RUB") }
@@ -54,28 +55,29 @@ fun EditAccountScreen(
     LaunchedEffect(accountDetails, initialBalance) {
         accountDetails?.let { acc ->
             accountName = acc.name
-            balance = acc.balance.toPlainString()
+            balance = acc.balance.toString()
             currency = acc.currency
         } ?: run {
+            accountName = ""
             balance = initialBalance.replace(Regex("[^0-9.-]"), "").ifEmpty { "0" }
         }
     }
 
-
     LaunchedEffect(uiState) {
         when (val state = uiState) {
-            is EditAccountUiState.Success -> {
-                Toast.makeText(context, state.message ?: "Операция успешна", Toast.LENGTH_SHORT).show()
-                viewModel.resetState()
-                navController.popBackStack()
+            is UiState.Success -> {
+                val message = state.data
+                if (message == "Счет сохранен" || message == "Счет удален (имитация)") {
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    viewModel.resetState()
+                    navController.popBackStack()
+                }
             }
-            is EditAccountUiState.Error -> {
+            is UiState.Error -> {
                 Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
                 viewModel.resetState()
             }
-            is EditAccountUiState.Loading -> {
-            }
-            EditAccountUiState.Idle -> {}
+            is UiState.Loading -> {}
         }
     }
 
@@ -117,6 +119,27 @@ fun EditAccountScreen(
                 .fillMaxSize()
                 .background(EditProfileBackgroundColor)
         ) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().background(White).height(56.dp)
+            ) {
+                TextField(
+                    value = accountName,
+                    onValueChange = { accountName = it },
+                    placeholder = { Text("Название счета") },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    )
+                )
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -125,29 +148,23 @@ fun EditAccountScreen(
                     .background(White)
                     .height(56.dp)
             ) {
-
                 Icon(
                     painter = painterResource(id = R.drawable.ic_profile),
                     contentDescription = null,
                     tint   = LightGrey,
-                    modifier = Modifier
-                        .padding(start = 16.dp)
-                        .size(16.dp)
+                    modifier = Modifier.padding(start = 16.dp).size(16.dp)
                 )
-
                 Spacer(Modifier.width(20.dp))
-
                 Text(
                     text = "Баланс",
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(0.35f)
                 )
-
                 TextField(
                     value = balance,
                     onValueChange = { input ->
                         balance = input.filterIndexed { idx, ch ->
-                            ch.isDigit() || (ch == '-' && idx == 0)
+                            ch.isDigit() || (ch == '.' && !input.contains('.')) || (ch == '-' && idx == 0)
                         }
                     },
                     singleLine  = true,
@@ -161,19 +178,13 @@ fun EditAccountScreen(
                         disabledContainerColor  = Color.Transparent,
                         focusedIndicatorColor   = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor  = Color.Transparent,
                     ),
                     modifier = Modifier
                         .weight(0.45f)
                         .focusRequester(focusRequester)
                 )
-
                 Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(56.dp)
-                        .background(Red)
-                        .clickable { balance = "" },
+                    modifier = Modifier.fillMaxHeight().width(56.dp).background(Red).clickable { balance = "" },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -201,7 +212,7 @@ fun EditAccountScreen(
                         containerColor = Red,
                         contentColor = White
                     ),
-                    enabled = uiState !is EditAccountUiState.Loading
+                    enabled = uiState !is UiState.Loading
                 ) {
                     Text("Удалить счет")
                 }
