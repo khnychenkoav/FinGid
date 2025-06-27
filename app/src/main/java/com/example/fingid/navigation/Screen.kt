@@ -26,4 +26,21 @@ sealed class Screen(val route: String) {
         fun createRoute(start: String, end: String) =
             "expenses_analysis_screen/$start/$end"
     }
+    companion object {
+        fun getTitleByRoute(route: String): String {
+            return when (route) {
+                Expenses.route -> "Расходы сегодня"
+                Income.route -> "Доходы сегодня"
+                Account.route -> "Мой счет"
+                Articles.route -> "Мои статьи"
+                Settings.route -> "Настройки"
+                ExpensesHistory.route -> "История расходов"
+                else -> ""
+            }
+        }
+
+        fun needShowTopBar(route: String): Boolean {
+            return false
+        }
+    }
 }
