@@ -41,6 +41,11 @@ import com.example.fingid.ui.screens.SettingsScreen
 import com.example.fingid.ui.screens.AnalysisScreen
 import com.example.fingid.ui.theme.FinGidTheme
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.fingid.ui.screens.AccountViewModel
+import com.example.fingid.ui.screens.AccountViewModelFactory
+import com.example.fingid.ui.screens.EditAccountViewModel
+import com.example.fingid.ui.screens.EditAccountViewModelFactory
 
 
 class MainActivity : ComponentActivity() {
@@ -70,12 +75,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppRoot() {
     val navController = rememberNavController()
-    var currentAccountBalance by remember { mutableStateOf("-670 000 ₽") }
-
     Column(modifier = Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
-            startDestination = Screen.Settings.route,
+            startDestination = Screen.Account.createRoute(1L),
             modifier = Modifier.weight(1f)
         ) {
             composable(Screen.Expenses.route) {
@@ -84,10 +87,22 @@ fun AppRoot() {
             composable(Screen.Income.route) {
                 IncomeScreen(navController = navController)
             }
-            composable(Screen.Account.route) {
+            composable(
+                route = Screen.Account.route,
+                arguments = listOf(navArgument("accountId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val accountId = backStackEntry.arguments?.getLong("accountId")
+                if (accountId == null) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Ошибка: ID счета не найден.")
+                    }
+                    return@composable
+                }
+                val viewModelFactory = AccountViewModelFactory(accountId)
+                val accountViewModel: AccountViewModel = viewModel(factory = viewModelFactory)
                 AccountScreen(
                     navController = navController,
-                    currentBalance = currentAccountBalance
+                    viewModel = accountViewModel
                 )
             }
             composable(Screen.Articles.route) {
@@ -98,20 +113,25 @@ fun AppRoot() {
             }
             composable(
                 route = Screen.EditAccount.route,
-                arguments = listOf(navArgument("balanceValue") { type = NavType.StringType })
+                arguments = listOf(
+                    navArgument("accountId") {
+                        type = NavType.StringType
+                        nullable = true
+                    },
+                    navArgument("balanceValue") { type = NavType.StringType }
+                )
             ) { backStackEntry ->
-                val balanceValue = backStackEntry.arguments?.getString("balanceValue") ?: ""
+                val accountIdStr = backStackEntry.arguments?.getString("accountId")
+                val accountId = if (accountIdStr == "new" || accountIdStr == null) null else accountIdStr.toLongOrNull()
+                val balanceValue = backStackEntry.arguments?.getString("balanceValue") ?: "0"
+
+                val viewModelFactory = EditAccountViewModelFactory(accountId)
+                val viewModel: EditAccountViewModel = viewModel(factory = viewModelFactory)
+
                 EditAccountScreen(
                     navController = navController,
                     initialBalance = balanceValue,
-                    onSaveAccount = { newBalance ->
-                        currentAccountBalance = newBalance
-                        println("Баланс сохранен: $newBalance")
-                    },
-                    onDeleteAccount = {
-                        println("Счет удален!")
-                        currentAccountBalance = "0 ₽"
-                    }
+                    viewModel = viewModel
                 )
             }
             composable(
@@ -143,8 +163,16 @@ fun AppRoot() {
             composable(Screen.ExpensesHistory.route) {
                 ExpensesHistoryScreen(navController)
             }
-            composable(Screen.Analysis.route) {
-                AnalysisScreen(navController = navController)
+            composable(
+                route = Screen.Analysis.route,
+                arguments = listOf(
+                    navArgument("start") { type = NavType.StringType },
+                    navArgument("end")   { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val start = backStackEntry.arguments?.getString("start") ?: ""
+                val end   = backStackEntry.arguments?.getString("end")   ?: ""
+                AnalysisScreen(navController = navController, startLabel = start, endLabel = end)
             }
         }
         AppBottomNavigationBar(navController = navController)

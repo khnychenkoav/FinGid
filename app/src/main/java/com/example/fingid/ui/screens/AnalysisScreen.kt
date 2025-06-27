@@ -53,8 +53,8 @@ import com.example.fingid.utils.formatAsRuble
 @Composable
 fun AnalysisScreen(
     navController: NavController,
-    startLabel: String = "февраль 2025",
-    endLabel: String = "март 2025",
+    startLabel: String,
+    endLabel: String,
     entries: List<ExpenseEntryItem> = sampleAnalysis()
 ) {
     fun ExpenseEntryItem.numeric(): Long = amount.filter { it.isDigit() }.toLong()
@@ -298,6 +298,6 @@ private fun sampleAnalysis(): List<ExpenseEntryItem> = listOf(
 @Composable
 private fun AnalysisPreview() {
     FinGidTheme(darkTheme = false) {
-        AnalysisScreen(navController = rememberNavController())
+        AnalysisScreen(navController = rememberNavController(), startLabel = "Начало", endLabel = "Конец")
     }
 }

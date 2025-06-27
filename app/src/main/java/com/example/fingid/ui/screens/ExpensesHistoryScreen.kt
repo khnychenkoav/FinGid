@@ -11,7 +11,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.example.fingid.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,20 +28,30 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.fingid.domain.models.ExpenseEntryItem
+import com.example.fingid.navigation.Screen
 import com.example.fingid.ui.theme.*
 import com.example.fingid.utils.formatAsRuble
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
+private fun Long.toLocalDate(): LocalDate =
+    Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpensesHistoryScreen(navController: NavController) {
-    val headers = remember {
-        listOf(
-            "Начало" to "Февраль 2025",
-            "Конец" to "23:41",
-            "Сумма" to "125 868 ₽"
-        )
-    }
+    val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+    var startDate by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
+    var endDate   by remember { mutableStateOf(LocalDate.now()) }
+    var showPickerForStart by remember { mutableStateOf(false) }
+    var showPickerForEnd   by remember { mutableStateOf(false) }
+    val headers = listOf(
+        "Начало" to startDate.format(dateFormatter),
+        "Конец"  to endDate.format(dateFormatter),
+        "Сумма"  to "125 868 ₽"
+    )
 
     val history = remember { sampleHistory() }
 
@@ -54,7 +67,12 @@ fun ExpensesHistoryScreen(navController: NavController) {
                 title = { Text("Моя история", style = MaterialTheme.typography.titleLarge) },
                 actions = {
                     IconButton(onClick = {
-                        navController.navigate("expenses_analysis_screen")
+                        navController.navigate(
+                            Screen.Analysis.createRoute(
+                                startDate.format(dateFormatter),
+                                endDate.format(dateFormatter)
+                            )
+                        )
                     }) {
                         Icon(painter = painterResource(R.drawable.ic_trailng_clock), contentDescription = "Фильтр по периоду", tint = LightGrey, modifier = Modifier.size(48.dp))
                     }
@@ -73,7 +91,12 @@ fun ExpensesHistoryScreen(navController: NavController) {
                 .fillMaxSize()
         ) {
             items(headers) { (label, value) ->
-                InfoRow(label = label, value = value)
+                InfoRow(label = label, value = value, onClick = {
+                    when (label) {
+                        "Начало" -> showPickerForStart = true
+                        "Конец"  -> showPickerForEnd   = true
+                    }
+                })
                 if (label != headers.last().first) {
                     HorizontalDivider(color = DividerColor, thickness = 1.dp)
                 }
@@ -87,15 +110,45 @@ fun ExpensesHistoryScreen(navController: NavController) {
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
             }
         }
+        if (showPickerForStart) {
+            val state = rememberDatePickerState(initialSelectedDateMillis = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
+            DatePickerDialog(
+                onDismissRequest = { showPickerForStart = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        state.selectedDateMillis?.let { startDate = it.toLocalDate() }
+                        showPickerForStart = false
+                    }) { Text("OK") }
+                }
+            ) { DatePicker(state = state) }
+        }
+
+        if (showPickerForEnd) {
+            val state = rememberDatePickerState(initialSelectedDateMillis = endDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
+            DatePickerDialog(
+                onDismissRequest = { showPickerForEnd = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        state.selectedDateMillis?.let { endDate = it.toLocalDate() }
+                        showPickerForEnd = false
+                    }) { Text("OK") }
+                }
+            ) { DatePicker(state = state) }
+        }
     }
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(
+    label: String,
+    value: String,
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(LightGreen)
+            .clickable { onClick() }
             .height(56.dp)
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
