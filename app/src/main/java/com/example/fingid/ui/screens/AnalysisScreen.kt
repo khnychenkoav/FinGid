@@ -13,16 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -40,14 +31,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.fingid.R
-import com.example.fingid.domain.models.ExpenseEntryItem
-import com.example.fingid.ui.theme.AppGreen
-import com.example.fingid.ui.theme.Black
-import com.example.fingid.ui.theme.DividerColor
-import com.example.fingid.ui.theme.FinGidTheme
-import com.example.fingid.ui.theme.LightGreen
-import com.example.fingid.ui.theme.White
+import com.example.fingid.domain.model.Transaction
+import com.example.fingid.ui.theme.*
 import com.example.fingid.utils.formatAsRuble
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,15 +42,29 @@ fun AnalysisScreen(
     navController: NavController,
     startLabel: String,
     endLabel: String,
-    entries: List<ExpenseEntryItem> = sampleAnalysis()
-) {
-    fun ExpenseEntryItem.numeric(): Long = amount.filter { it.isDigit() }.toLong()
 
-    val total = remember(entries) { entries.sumOf { it.numeric() } }
-    val pairs = remember(entries, total) {
-        entries.mapIndexed { idx, e ->
-            val pct = if (total == 0L) 0 else (e.numeric() * 100 / total).toInt()
-            Triple(e, pct, sliceColor(idx))
+    transactions: List<Transaction> = sampleAnalysisTransactions()
+) {
+    val aggregatedData = remember(transactions) {
+        transactions
+            .groupBy { it.categoryName }
+            .map { (categoryName, transactionList) ->
+                val totalAmount = transactionList.sumOf { it.amount }
+                val emoji = transactionList.first().categoryEmoji
+                AggregatedTransaction(
+                    categoryName = categoryName,
+                    totalAmount = totalAmount,
+                    emoji = emoji
+                )
+            }
+    }
+
+    val totalAmount = remember(aggregatedData) { aggregatedData.sumOf { it.totalAmount } }
+
+    val chartSlices = remember(aggregatedData, totalAmount) {
+        aggregatedData.mapIndexed { index, data ->
+            val percentage = if (totalAmount > 0) (data.totalAmount / totalAmount * 100).toFloat() else 0f
+            ChartSlice(data, percentage, sliceColor(index))
         }
     }
 
@@ -94,7 +95,7 @@ fun AnalysisScreen(
             HorizontalDivider(color = DividerColor, thickness = 1.dp)
             PeriodRow(label = "Период: конец", value = endLabel)
             HorizontalDivider(color = DividerColor, thickness = 1.dp)
-            InfoRow(label = "Сумма", value = total.toString().formatAsRuble())
+            InfoRow(label = "Сумма", value = totalAmount.toString().formatAsRuble())
             HorizontalDivider(color = DividerColor, thickness = 1.dp)
 
             Box(
@@ -103,15 +104,19 @@ fun AnalysisScreen(
                     .height(185.dp),
                 contentAlignment = Alignment.Center
             ) {
-                AnimatedDonutChart(pairs.map { it.second })
-                LegendInsideDonut(pairs)
+                AnimatedDonutChart(chartSlices.map { it.percentage })
+                LegendInsideDonut(chartSlices)
             }
 
             HorizontalDivider(color = DividerColor, thickness = 1.dp)
 
             LazyColumn {
-                items(pairs, key = { it.first.id }) { (item, percent, color) ->
-                    AnalysisEntryRow(item = item, percent = percent, onClick = { /* TODO */ })
+                items(chartSlices, key = { it.data.categoryName }) { slice ->
+                    AnalysisEntryRow(
+                        item = slice.data,
+                        percent = slice.percentage.roundToInt(),
+                        onClick = { /* TODO */ }
+                    )
                     HorizontalDivider(color = DividerColor, thickness = 1.dp)
                 }
             }
@@ -119,19 +124,28 @@ fun AnalysisScreen(
     }
 }
 
+data class AggregatedTransaction(
+    val categoryName: String,
+    val totalAmount: Double,
+    val emoji: String
+)
+
+data class ChartSlice(
+    val data: AggregatedTransaction,
+    val percentage: Float,
+    val color: Color
+)
+
 @Composable
 private fun AnimatedDonutChart(
-    percentages: List<Int>,
+    percentages: List<Float>,
     strokeWidthDp: Float = 24f
 ) {
     val animProgress = remember { Animatable(0f) }
     LaunchedEffect(percentages) {
         animProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = 1000,
-                easing = FastOutSlowInEasing
-            )
+            animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
         )
     }
     Canvas(modifier = Modifier.size(150.dp)) {
@@ -139,8 +153,8 @@ private fun AnimatedDonutChart(
         val radius = size.minDimension / 2
         val diameter = radius * 2
         var angleStart = -90f
-        val clean = percentages.filter { it > 0 }
-        clean.forEachIndexed { idx, pct ->
+        val cleanPercentages = percentages.filter { it > 0 }
+        cleanPercentages.forEachIndexed { idx, pct ->
             val fullSweep = 360 * (pct / 100f)
             val sweep = fullSweep * animProgress.value
             drawArc(
@@ -201,37 +215,25 @@ private fun InfoRow(
 }
 
 @Composable
-private fun AnalysisEntryRow(item: ExpenseEntryItem, percent: Int, onClick: () -> Unit) {
+private fun AnalysisEntryRow(item: AggregatedTransaction, percent: Int, onClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(72.dp)
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().height(72.dp).clickable { onClick() }.padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(item.iconCircleBackgroundColor ?: LightGreen),
+            modifier = Modifier.size(24.dp).clip(CircleShape).background(LightGreen),
             contentAlignment = Alignment.Center
         ) {
-            val txt = item.displayIcon ?: item.categoryName.split(' ').filter { it.isNotBlank() }.take(2)
-                .joinToString("") { it.first().uppercase() }
-            Text(txt, fontSize = 10.sp, color = Black)
+            Text(item.emoji, fontSize = 10.sp, color = Black)
         }
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
             Text(item.categoryName, style = MaterialTheme.typography.bodyLarge, color = Black)
-            if (!item.subCategoryName.isNullOrBlank()) {
-                Text(item.subCategoryName, style = MaterialTheme.typography.bodySmall, color = Black)
-            }
         }
         Column(horizontalAlignment = Alignment.End) {
             Text("$percent%", style = MaterialTheme.typography.bodyLarge, color = Black)
             Spacer(Modifier.height(2.dp))
-            Text(item.amount, style = MaterialTheme.typography.bodyLarge, color = Black)
+            Text(item.totalAmount.toString().formatAsRuble(), style = MaterialTheme.typography.bodyLarge, color = Black)
         }
         Spacer(Modifier.width(8.dp))
         Icon(
@@ -243,12 +245,12 @@ private fun AnalysisEntryRow(item: ExpenseEntryItem, percent: Int, onClick: () -
 }
 
 @Composable
-private fun LegendInsideDonut(data: List<Triple<ExpenseEntryItem, Int, Color>>) {
+private fun LegendInsideDonut(data: List<ChartSlice>) {
     Column(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
-        data.forEach { (item, pct, color) ->
+        data.forEach { (aggregatedData, percentage, color) ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(0.dp)) {
                 Box(
                     modifier = Modifier
@@ -258,7 +260,7 @@ private fun LegendInsideDonut(data: List<Triple<ExpenseEntryItem, Int, Color>>) 
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
-                    text = "$pct% ${item.categoryName}",
+                    text = "${percentage.roundToInt()}% ${aggregatedData.categoryName}",
                     fontSize = 8.sp,
                     lineHeight = 8.sp,
                     color = Black
@@ -276,22 +278,10 @@ private fun sliceColor(index: Int): Color = when (index % 4) {
     else -> Color(0xFF2962FF)
 }
 
-private fun sampleAnalysis(): List<ExpenseEntryItem> = listOf(
-    ExpenseEntryItem(
-        id = "remont",
-        categoryName = "Ремонт квартиры",
-        subCategoryName = "Ремонт – фурнитура для дверей",
-        amount = "20000".formatAsRuble(),
-        displayIcon = "PK",
-        iconCircleBackgroundColor = LightGreen
-    ),
-    ExpenseEntryItem(
-        id = "dog",
-        categoryName = "На собачку",
-        amount = "80000".formatAsRuble(),
-        displayIcon = "🐶",
-        iconCircleBackgroundColor = LightGreen
-    )
+private fun sampleAnalysisTransactions(): List<Transaction> = listOf(
+    Transaction(1, "1", "Ремонт", "🔨", false, 20000.0, "", null),
+    Transaction(2, "1", "На собачку", "🐶", false, 80000.0, "", null),
+    Transaction(3, "1", "Ремонт", "🔨", false, 5000.0, "", "фурнитура")
 )
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
