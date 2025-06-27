@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,17 +8,29 @@ plugins {
 }
 
 android {
-    namespace = "com.example.fingid"
+    namespace = "com.example.myfinance"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.fingid"
-        minSdk = 28
+        applicationId = "com.example.myfinance"
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProperties = Properties().apply {
+            load(rootProject.file("local.properties").inputStream())
+        }
+
+        val TOKEN = localProperties.getProperty("TOKEN", "yE4ijltE4dLKTkhSQ6Nd7e0p")
+
+        buildConfigField(
+            "String",
+            "TOKEN",
+            "\"$TOKEN\""
+        )
     }
 
     buildTypes {
@@ -37,6 +51,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -51,17 +66,12 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.material.icons.core)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.core.splashscreen)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.retrofit)
-    implementation(libs.converter.kotlinx.serialization.v2110)
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
-    implementation(platform(libs.kotlinx.coroutines.bom))
-    implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.transport.runtime)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit2.converter.kotlinx.serialization)
+    implementation(libs.kotlinx.serialization.json)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
