@@ -3,6 +3,7 @@ package com.example.fingid.ui.screens
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.fingid.R
@@ -68,7 +70,8 @@ fun MainScreen() {
                     )
                 }
             },
-            bottomBar = {
+            contentWindowInsets = WindowInsets(0.dp),
+                    bottomBar = {
                 AppBottomNavigationBar(navController = navigationState.navHostController)
             }
         ) { paddingValues ->
