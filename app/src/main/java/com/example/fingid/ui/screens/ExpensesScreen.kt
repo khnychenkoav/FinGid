@@ -62,7 +62,7 @@ fun ExpensesScreen(navController: NavController) {
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
-                    IconButton(onClick = { navController.navigate(Screen.ExpensesHistory.route) }) {
+                    IconButton(onClick = { navController.navigate(Screen.History.route) }) {
                         Icon(
                             imageVector = Icons.Outlined.History,
                             contentDescription = "История расходов",

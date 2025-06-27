@@ -18,7 +18,6 @@ sealed class Screen(val route: String) {
     object AddEditIncome : Screen("income_add_edit_income_screen/{incomeId}") {
         fun createRoute(incomeId: String?) = "income_add_edit_income_screen/${incomeId ?: "new"}"
     }
-    object ExpensesHistory : Screen("expenses_history_screen")
     object History : Screen("history/{isIncome}") {
         fun createRoute(isIncome: Boolean) = "history/$isIncome"
     }
@@ -34,7 +33,7 @@ sealed class Screen(val route: String) {
                 Account.route -> "Мой счет"
                 Articles.route -> "Мои статьи"
                 Settings.route -> "Настройки"
-                ExpensesHistory.route -> "История расходов"
+                History.route -> "История расходов"
                 else -> ""
             }
         }

@@ -59,7 +59,7 @@ fun MainScreen() {
                         ),
                         actions = {
                             if (currentRoute == Screen.Expenses.route) {
-                                IconButton(onClick = { navigationState.navHostController.navigate(Screen.ExpensesHistory.route) }) {
+                                IconButton(onClick = { navigationState.navHostController.navigate(Screen.History.route) }) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_trailng_clock),
                                         contentDescription = "История расходов"
