@@ -4,15 +4,26 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
 }
 
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(localPropertiesFile.inputStream())
+    }
+}
+
+val financeApiKey: String = localProperties.getProperty("financeApiKey")?.let {
+    "\"$it\""
+} ?: "\"\""
+
 android {
-    namespace = "com.example.myfinance"
+    namespace = "com.example.fingid"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.myfinance"
+        applicationId = "com.example.fingid"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -20,21 +31,15 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val localProperties = Properties().apply {
-            load(rootProject.file("local.properties").inputStream())
-        }
-
-        val TOKEN = localProperties.getProperty("TOKEN", "yE4ijltE4dLKTkhSQ6Nd7e0p")
-
-        buildConfigField(
-            "String",
-            "TOKEN",
-            "\"$TOKEN\""
-        )
+        buildConfigField("String", "FINANCE_API_KEY", financeApiKey)
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "FINANCE_API_KEY", financeApiKey)
+        }
         release {
+            buildConfigField("String", "FINANCE_API_KEY", financeApiKey)
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -56,7 +61,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -66,11 +70,20 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.okhttp)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.lottie.compose)
+
     implementation(libs.retrofit)
-    implementation(libs.retrofit2.converter.kotlinx.serialization)
+    implementation(libs.retrofit2.kotlinx.serialization.converter)
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
+    implementation(libs.jackson.databind)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.firebase.crashlytics.buildtools)
+
+    implementation(libs.androidx.core.splashscreen)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
