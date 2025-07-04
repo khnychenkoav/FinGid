@@ -1,22 +1,11 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.jetbrains.kotlin.serialization)
+    id("com.google.dagger.hilt.android")
+    id("kotlin-kapt")
+    alias(libs.plugins.detekt)
 }
-
-val localProperties = Properties().apply {
-    val localPropertiesFile = rootProject.file("local.properties")
-    if (localPropertiesFile.exists()) {
-        load(localPropertiesFile.inputStream())
-    }
-}
-
-val financeApiKey: String = localProperties.getProperty("financeApiKey")?.let {
-    "\"$it\""
-} ?: "\"\""
 
 android {
     namespace = "com.example.fingid"
@@ -24,22 +13,16 @@ android {
 
     defaultConfig {
         applicationId = "com.example.fingid"
-        minSdk = 26
+        minSdk = 25
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField("String", "FINANCE_API_KEY", financeApiKey)
     }
 
     buildTypes {
-        debug {
-            buildConfigField("String", "FINANCE_API_KEY", financeApiKey)
-        }
         release {
-            buildConfigField("String", "FINANCE_API_KEY", financeApiKey)
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -56,11 +39,25 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 }
 
+detekt {
+    config.from("$rootDir/config/detekt/detekt.yml")
+    buildUponDefaultConfig = false;
+    autoCorrect = false
+}
+
 dependencies {
+    implementation(libs.retrofit)
+    implementation(libs.converter.moshi)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -69,25 +66,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.runtime.livedata)
-    implementation(libs.lottie.compose)
-
-    implementation(libs.retrofit)
-    implementation(libs.retrofit2.kotlinx.serialization.converter)
-    implementation(libs.okhttp)
-    implementation(libs.logging.interceptor)
-    implementation(libs.jackson.databind)
-    implementation(libs.kotlinx.serialization.json)
-
-    implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.firebase.crashlytics.buildtools)
-
-    implementation(libs.androidx.core.splashscreen)
-
-    implementation(libs.androidx.material.icons.core)
-    implementation(libs.androidx.material.icons.extended)
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

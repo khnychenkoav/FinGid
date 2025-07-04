@@ -1,24 +1,34 @@
 package com.example.fingid.data.repository
 
-import com.example.fingid.data.mapper.toAccountBrief
-import com.example.fingid.data.mapper.toDomain
-import com.example.fingid.data.model.account.UpdateAccountsRequest
-import com.example.fingid.domain.model.Account
+import android.os.Build
+import androidx.annotation.RequiresApi
+import com.example.fingid.data.datasource.AccountRemoteDataSource
+import com.example.fingid.data.remote.api.safeApiCall
+import com.example.fingid.data.repository.mapper.AccountDomainMapper
+import com.example.fingid.domain.model.AccountBriefDomain
+import com.example.fingid.domain.model.AccountDomain
 import com.example.fingid.domain.repository.AccountRepository
-import com.example.fingid.data.remote.FinanceApiService
+import javax.inject.Inject
 
-class AccountRepositoryImpl(
-    private val api: FinanceApiService
+
+internal class AccountRepositoryImpl @Inject constructor(
+    private val remoteDataSource: AccountRemoteDataSource,
+    private val mapper: AccountDomainMapper
 ) : AccountRepository {
 
-    override suspend fun getAccounts(): List<Account> {
-        return api.getAccountList().map { it.toDomain() }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override suspend fun getAccountById(accountId: Int): Result<AccountDomain> {
+        return safeApiCall {
+            mapper.mapAccount(remoteDataSource.getAccountById(accountId))
+        }
     }
 
-    override suspend fun updateAccounts(accounts: List<Account>) {
-        val request = UpdateAccountsRequest(
-            accounts = accounts.map { it.toAccountBrief() }
-        )
-        api.updateAccounts(request)
+    override suspend fun updateAccountById(accountBrief: AccountBriefDomain) {
+        safeApiCall {
+            remoteDataSource.updateAccountById(
+                accountBrief = mapper.mapAccountBrief(accountBrief)
+            )
+        }
     }
 }

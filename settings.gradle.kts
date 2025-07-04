@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FinGid"
+rootProject.name = "fingid"
 include(":app")
  

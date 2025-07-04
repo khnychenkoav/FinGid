@@ -1,53 +1,64 @@
 <resources>
-    <string name="app_name">FinGid</string>
-
-    <!-- Bottom Navigation -->
-    <string name="bottom_nav_expenses">Расходы</string>
-    <string name="bottom_nav_income">Доходы</string>
-    <string name="bottom_nav_account">Счет</string>
-    <string name="bottom_nav_articles">Статьи</string>
-    <string name="bottom_nav_settings">Настройки</string>
-
-    <!-- Top Bar Titles -->
-    <string name="expenses_today">Расходы сегодня</string>
-    <string name="income_today">Доходы сегодня</string>
-    <string name="my_account">Мой счет</string>
-    <string name="my_articles">Мои статьи</string>
-    <string name="my_history">Моя история</string>
-    <string name="settings">Настройки</string>
-
-    <!-- Settings Screen -->
-    <string name="dark_theme">Темная тема</string>
-    <string name="main_color">Основной цвет</string>
-    <string name="sounds">Звуки</string>
-    <string name="haptics">Хаптики</string>
-    <string name="password">Код пароль</string>
-    <string name="synchronizing">Синхронизация</string>
-    <string name="language">Язык</string>
-    <string name="about_the_program">О программе</string>
-
-    <!-- History Screen -->
-    <string name="start">Начало</string>
-    <string name="end">Конец</string>
-    <string name="sum">Сумма</string>
-
-    <!-- Common -->
-    <string name="total">Всего</string>
-    <string name="price">"%s ₽"</string>
-    <string name="currency">Валюта</string>
-    <string name="balance">Баланс</string>
-    <string name="find_article">Найти статью</string>
-    <string name="add_expense">Добавить расход</string>
+    <string name="app_name">shmr-finance-app-android</string>
+    <string name="expense_screen_title">Расходы сегодня</string>
+    <string name="income_screen_title">Доходы сегодня</string>
+    <string name="balance_screen_title">Мой счет</string>
+    <string name="categories_screen_title">Мои статьи</string>
+    <string name="settings_screen_title">Настройки</string>
+    <string name="expenses_history_screen_title">Моя история</string>
+    <string name="expense_screen_label">Расходы</string>
+    <string name="income_screen_label">Доходы</string>
+    <string name="balance_screen_label">Счет</string>
+    <string name="categories_screen_label">Статьи</string>
+    <string name="settings_screen_label">Настройки</string>
+    <string name="trail_icon_description">Открыть</string>
+    <string name="expenses_history_description">История расходов</string>
+    <string name="total_amount">Всего</string>
     <string name="retry">Повторить</string>
-    <string name="loading">Загрузка</string>
-    <string name="money_icon">💰</string>
-
-    <!-- Errors -->
-    <string name="error">Произошла ошибка</string>
-    <string name="no_accounts">Нет доступных аккаунтов</string>
-    <string name="unknown_error">Неизвестная ошибка</string>
-    <string name="no_internet_connection">Отсутствует подключение к интернету</string>
-    <string name="network_error">Ошибка сети</string>
-    <string name="server_error">Ошибка сервера</string>
-
+    <string name="period_no_expenses_found">У вас нет расходов за указанный период</string>
+    <string name="period_no_income_found">У вас нет доходов за указанный период</string>
+    <string name="today_no_expenses_found">Сегодня у вас нет расходов</string>
+    <string name="today_no_income_found">Сегодня у вас нет доходов</string>
+    <string name="incomes_history_description">История доходов</string>
+    <string name="balance_edit_description">Изменить счет</string>
+    <string name="balance">Баланс</string>
+    <string name="currency">Валюта</string>
+    <string name="no_categories_found">У вас нет статей расходов</string>
+    <string name="categories_search_placeholder">Найти статью</string>
+    <string name="categories_search_description">Поиск статьи</string>
+    <string name="dark_theme_option">Темная тема</string>
+    <string name="add_expense_description">Добавить расход</string>
+    <string name="add_income_description">Добавить доход</string>
+    <string name="add_balance_description">Добавить счет</string>
+    <string name="back_description">Назад</string>
+    <string name="expenses_analysis_description">Анализ расходов</string>
+    <string name="period_start">Начало</string>
+    <string name="period_end">Конец</string>
+    <string name="summary">Сумма</string>
+    <string name="back">Назад</string>
+    <string name="network_error">Нет интернета</string>
+    <string name="api_error">Ошибка с сервером</string>
+    <string name="unknown_error">Что-то пошло не так</string>
+    <string name="main_color_option">Основной цвет</string>
+    <string name="sounds_options">Звуки</string>
+    <string name="haptics_options">Хаптики</string>
+    <string name="code_password_option">Код пароль</string>
+    <string name="synchronize_option">Синхронизация</string>
+    <string name="language_option">Язык</string>
+    <string name="about_option">О программе</string>
+    <string name="select">Выбрать</string>
+    <string name="cancel">Отменить</string>
+    <string name="choice_date">Выберите дату</string>
+    <string name="ruble_currency">Российский рубль</string>
+    <string name="dollar_currency">Американский доллар</string>
+    <string name="euro_currency">Евро</string>
+    <string name="dismiss">Отмена</string>
+    <string name="balance_edit_save_description">Сохранить изменения</string>
+    <string name="balance_edit_cancel_description">Отменить изменения</string>
+    <string name="balance_name">Название счета</string>
+    <string name="balance_name_error_message">Введите корректное название счета</string>
+    <string name="balance_amount_error_message">Введите корректный баланс</string>
+    <string name="close">Закрыть</string>
+    <string name="empty_filtered_categories">Не найдено подходящих категорий</string>
+    <string name="delete_balance">Удалить счет</string>
 </resources>
