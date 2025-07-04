@@ -1,8 +1,10 @@
 package com.example.fingid.domain.repository
 
-import com.example.fingid.domain.model.Account
+import com.example.fingid.domain.model.AccountBriefDomain
+import com.example.fingid.domain.model.AccountDomain
+
 
 interface AccountRepository {
-    suspend fun getAccounts(): List<Account>
-    suspend fun updateAccounts(accounts: List<Account>)
+    suspend fun getAccountById(accountId: Int): Result<AccountDomain>
+    suspend fun updateAccountById(accountBrief: AccountBriefDomain)
 }
