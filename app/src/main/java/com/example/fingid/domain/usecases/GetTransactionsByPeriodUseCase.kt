@@ -2,7 +2,7 @@ package com.example.fingid.domain.usecases
 
 import com.example.fingid.data.remote.api.AppError
 import com.example.fingid.data.remote.api.NetworkChecker
-import com.example.fingid.domain.model.TransactionDomain
+import com.example.fingid.domain.model.TransactionResponseDomain
 import com.example.fingid.domain.repository.TransactionsRepository
 import dagger.Reusable
 import javax.inject.Inject

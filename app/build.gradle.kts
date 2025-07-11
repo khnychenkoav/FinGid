@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.shmr_finance_app_android"
+    namespace = "com.example.fingid"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.shmr_finance_app_android"
+        applicationId = "com.example.fingid"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

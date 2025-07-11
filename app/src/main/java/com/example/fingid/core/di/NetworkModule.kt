@@ -19,7 +19,7 @@ import javax.inject.Singleton
 object NetworkModule {
 
     private const val BASE_URL = "https://shmr-finance.ru/api/v1/"
-    private const val AUTH_TOKEN = "вставьте свой токен"
+    private const val AUTH_TOKEN = "токентокентокен"
 
     @Provides
     @Named("maxRetries")

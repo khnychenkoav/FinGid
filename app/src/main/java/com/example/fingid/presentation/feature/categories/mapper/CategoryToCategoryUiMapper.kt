@@ -5,7 +5,7 @@ import com.example.fingid.presentation.feature.categories.model.CategoryUiModel
 import javax.inject.Inject
 
 
-class CategoryToIncomeCategoryMapper @Inject constructor() {
+class CategoryToCategoryUiMapper @Inject constructor() {
     fun map(domain: CategoryDomain): CategoryUiModel {
         return CategoryUiModel(
             id = domain.id,
