@@ -8,33 +8,30 @@ import com.example.fingid.domain.repository.CategoriesRepository
 import com.example.fingid.domain.repository.TransactionsRepository
 import dagger.Binds
 import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 
 @Module
-@InstallIn(SingletonComponent::class)
 internal interface RepositoryModule {
 
 
     @Binds
     @Singleton
-    fun bindsAccountRepository(
+    fun bindAccountRepository(
         accountRepository: AccountRepositoryImpl,
     ): AccountRepository
 
 
     @Binds
     @Singleton
-    fun bindsCategoriesRepository(
+    fun bindCategoriesRepository(
         categoriesRepository: CategoriesRepositoryImpl,
     ): CategoriesRepository
 
 
     @Binds
     @Singleton
-    fun bindsTransactionsRepository(
+    fun bindTransactionsRepository(
         transactionsRepository: TransactionsRepositoryImpl,
     ): TransactionsRepository
 }

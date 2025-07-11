@@ -1,20 +1,19 @@
 package com.example.fingid.presentation.feature.expenses.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fingid.R
 import com.example.fingid.core.utils.Constants
 import com.example.fingid.core.utils.getCurrentDate
 import com.example.fingid.data.remote.api.AppError
-import com.example.fingid.domain.model.TransactionDomain
 import com.example.fingid.domain.usecases.GetExpensesByPeriodUseCase
-import com.example.fingid.presentation.feature.balance.model.BalanceUiModel
 import com.example.fingid.presentation.feature.expenses.mapper.TransactionToExpenseMapper
 import com.example.fingid.presentation.feature.expenses.model.ExpenseUiModel
-import com.example.fingid.presentation.feature.expenses.viewmodel.ExpensesScreenState.Error
-import com.example.fingid.presentation.feature.expenses.viewmodel.ExpensesScreenState.Loading
-import com.example.fingid.presentation.feature.expenses.viewmodel.ExpensesScreenState.Success
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.fingid.presentation.feature.expenses.viewmodel.ExpensesUiState.Content
+import com.example.fingid.presentation.feature.expenses.viewmodel.ExpensesUiState.Empty
+import com.example.fingid.presentation.feature.expenses.viewmodel.ExpensesUiState.Error
+import com.example.fingid.presentation.feature.expenses.viewmodel.ExpensesUiState.Loading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,75 +22,53 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-sealed interface ExpensesScreenState {
-    data object Loading : ExpensesScreenState
-    data class Error(val messageResId: Int, val retryAction: () -> Unit) : ExpensesScreenState
-    data object Empty : ExpensesScreenState
-    data class Success(
+sealed interface ExpensesUiState {
+
+    data object Loading : ExpensesUiState
+
+
+    data class Content(
         val expenses: List<ExpenseUiModel>,
         val totalAmount: String
-    ) : ExpensesScreenState
+    ) : ExpensesUiState
+
+    data object Empty : ExpensesUiState
+
+    data class Error(@StringRes val messageResId: Int) : ExpensesUiState
 }
 
 
-@HiltViewModel
 class ExpensesScreenViewModel @Inject constructor(
     private val getTransactionsByPeriod: GetExpensesByPeriodUseCase,
     private val mapper: TransactionToExpenseMapper
 ) : ViewModel() {
 
-    private val _screenState = MutableStateFlow<ExpensesScreenState>(Loading)
-    val screenState: StateFlow<ExpensesScreenState> = _screenState.asStateFlow()
-
-    init {
-        loadExpenses()
-    }
+    private val _uiState = MutableStateFlow<ExpensesUiState>(Loading)
+    val uiState: StateFlow<ExpensesUiState> = _uiState.asStateFlow()
 
 
-    private fun loadExpenses() {
-        _screenState.value = Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            handleExpensesResult(
-                getTransactionsByPeriod(
-                    accountId = Constants.TEST_ACCOUNT_ID,
-                    startDate = getCurrentDate(),
-                    endDate = getCurrentDate()
-                )
-            )
-        }
-    }
+    fun init() = viewModelScope.launch(Dispatchers.IO) {
+        _uiState.value = Loading
 
+        val result = getTransactionsByPeriod(
+            accountId = Constants.TEST_ACCOUNT_ID,
+            startDate = getCurrentDate(),
+            endDate = getCurrentDate()
+        )
 
-    private fun handleExpensesResult(result: Result<List<TransactionDomain>>) {
         result
             .onSuccess { data ->
-                handleSuccess(
-                    data = data.sortedByDescending { it.transactionTime }.map { mapper.map(it) },
+                _uiState.value = Content(
+                    expenses = data.sortedByDescending { it.transactionTime }
+                        .map { mapper.map(it) },
                     totalAmount = mapper.calculateTotalAmount(data)
                 )
             }
-            .onFailure { error -> handleError(error) }
+            .onFailure { error -> showError(error) }
     }
 
-    private fun handleSuccess(
-        data: List<ExpenseUiModel>,
-        totalAmount: String
-    ) {
-        _screenState.value = if (data.isEmpty()) {
-            ExpensesScreenState.Empty
-        } else {
-            Success(
-                expenses = data,
-                totalAmount = totalAmount
-            )
-        }
-    }
-
-    private fun handleError(error: Throwable) {
-        val messageResId = (error as? AppError)?.messageResId ?: R.string.unknown_error
-        _screenState.value = Error(
-            messageResId = messageResId,
-            retryAction = { loadExpenses() }
-        )
+    private fun showError(t: Throwable) {
+        val res = (t as? AppError)?.messageResId ?: R.string.unknown_error
+        _uiState.value = Error(messageResId = res)
     }
 }

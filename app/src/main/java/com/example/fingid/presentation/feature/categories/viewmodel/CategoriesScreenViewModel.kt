@@ -1,17 +1,18 @@
 package com.example.fingid.presentation.feature.categories.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fingid.R
 import com.example.fingid.data.remote.api.AppError
-import com.example.fingid.domain.model.CategoryDomain
 import com.example.fingid.domain.usecases.GetCategoriesUseCase
-import com.example.fingid.presentation.feature.categories.mapper.CategoryToIncomeCategoryMapper
-import com.example.fingid.presentation.feature.categories.model.IncomeCategoryUiModel
-import com.example.fingid.presentation.feature.categories.viewmodel.CategoriesScreenState.Error
-import com.example.fingid.presentation.feature.categories.viewmodel.CategoriesScreenState.Loading
-import com.example.fingid.presentation.feature.categories.viewmodel.CategoriesScreenState.Success
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.fingid.presentation.feature.categories.mapper.CategoryToCategoryUiMapper
+import com.example.fingid.presentation.feature.categories.model.CategoryUiModel
+import com.example.fingid.presentation.feature.categories.viewmodel.CategoriesUiState.Content
+import com.example.fingid.presentation.feature.categories.viewmodel.CategoriesUiState.Empty
+import com.example.fingid.presentation.feature.categories.viewmodel.CategoriesUiState.Error
+import com.example.fingid.presentation.feature.categories.viewmodel.CategoriesUiState.Loading
+import com.example.fingid.presentation.feature.categories.viewmodel.CategoriesUiState.SearchEmpty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,59 +21,47 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-sealed interface CategoriesScreenState {
-    data object Loading : CategoriesScreenState
-    data class Error(val messageResId: Int, val retryAction: () -> Unit) : CategoriesScreenState
-    data object Empty : CategoriesScreenState
-    data object SearchEmpty : CategoriesScreenState
-    data class Success(val categories: List<IncomeCategoryUiModel>) : CategoriesScreenState
+
+sealed interface CategoriesUiState {
+
+    data object Loading : CategoriesUiState
+
+
+    data class Content(val categories: List<CategoryUiModel>) : CategoriesUiState
+
+    data object Empty : CategoriesUiState
+
+    data object SearchEmpty : CategoriesUiState
+
+    data class Error(@StringRes val messageResId: Int) : CategoriesUiState
 }
 
 
-@HiltViewModel
 class CategoriesScreenViewModel @Inject constructor(
     private val getCategories: GetCategoriesUseCase,
-    private val mapper: CategoryToIncomeCategoryMapper
+    private val mapper: CategoryToCategoryUiMapper
 ) : ViewModel() {
 
-    private val _screenState =
-        MutableStateFlow<CategoriesScreenState>(Loading)
-    val screenState: StateFlow<CategoriesScreenState> = _screenState.asStateFlow()
+    private val _uiState = MutableStateFlow<CategoriesUiState>(Loading)
+    val uiState: StateFlow<CategoriesUiState> = _uiState.asStateFlow()
 
-    private var cachedCategories: List<IncomeCategoryUiModel> = emptyList()
+    private var cachedCategories: List<CategoryUiModel> = emptyList()
 
     private val _searchRequest = MutableStateFlow("")
     val searchRequest: StateFlow<String> = _searchRequest
 
-    init {
-        loadCategories()
-    }
 
+    fun init() = viewModelScope.launch(Dispatchers.IO) {
+        _uiState.value = Loading
 
-    private fun loadCategories() {
-        _screenState.value = Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            handleCategoriesResult(getCategories())
-        }
-    }
+        val result = getCategories()
 
-    private fun handleCategoriesResult(result: Result<List<CategoryDomain>>) {
         result
-            .onSuccess { data -> handleSuccess(data.map { mapper.map(it) }) }
-            .onFailure { error -> handleError(error) }
-    }
-
-    private fun handleSuccess(data: List<IncomeCategoryUiModel>) {
-        cachedCategories = data
-        updateState()
-    }
-
-    private fun handleError(error: Throwable) {
-        val messageResId = (error as? AppError)?.messageResId ?: R.string.unknown_error
-        _screenState.value = Error(
-            messageResId = messageResId,
-            retryAction = { loadCategories() }
-        )
+            .onSuccess { data ->
+                cachedCategories = data.map { mapper.map(it) }
+                updateState()
+            }
+            .onFailure { error -> showError(error) }
     }
 
 
@@ -85,15 +74,20 @@ class CategoriesScreenViewModel @Inject constructor(
             }
         }
 
-        _screenState.value = when {
-            filtered.isEmpty() && query.isNotBlank() -> CategoriesScreenState.SearchEmpty
-            filtered.isEmpty() -> CategoriesScreenState.Empty
-            else -> Success(categories = filtered)
+        _uiState.value = when {
+            filtered.isEmpty() && query.isNotBlank() -> SearchEmpty
+            filtered.isEmpty() -> Empty
+            else -> Content(categories = filtered)
         }
     }
 
     fun onChangeSearchRequest(request: String) {
         _searchRequest.value = request
         updateState()
+    }
+
+    private fun showError(t: Throwable) {
+        val res = (t as? AppError)?.messageResId ?: R.string.unknown_error
+        _uiState.value = Error(messageResId = res)
     }
 }

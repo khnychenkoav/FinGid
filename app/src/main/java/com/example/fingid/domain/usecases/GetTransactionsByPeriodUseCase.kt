@@ -18,7 +18,7 @@ class GetTransactionsByPeriodUseCase @Inject constructor(
         accountId: Int,
         startDate: String? = null,
         endDate: String? = null
-    ): Result<List<TransactionDomain>> {
+    ): Result<List<TransactionResponseDomain>> {
         if (!networkChecker.isNetworkAvailable()) {
             return Result.failure(AppError.Network)
         }

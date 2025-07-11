@@ -1,11 +1,11 @@
 package com.example.fingid.data.repository.mapper
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.fingid.data.model.AccountBriefDTO
 import com.example.fingid.data.model.TransactionDTO
+import com.example.fingid.data.model.TransactionResponseDTO
 import com.example.fingid.domain.model.AccountBriefDomain
 import com.example.fingid.domain.model.TransactionDomain
+import com.example.fingid.domain.model.TransactionResponseDomain
 import java.math.RoundingMode
 import java.time.Instant
 import java.time.ZoneId
@@ -16,11 +16,10 @@ import javax.inject.Inject
 internal class TransactionsDomainMapper @Inject constructor(
     private val categoryMapper: CategoryDomainMapper
 ) {
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun mapTransaction(dto: TransactionDTO): TransactionDomain {
+    fun mapTransactionResponse(dto: TransactionResponseDTO): TransactionResponseDomain {
         val transactionAt = Instant.parse(dto.transactionDate).atZone(ZoneId.systemDefault())
 
-        return TransactionDomain(
+        return TransactionResponseDomain(
             id = dto.id,
             account = mapAccountBrief(dto.account),
             category = categoryMapper.mapCategory(dto.category),
@@ -37,6 +36,19 @@ internal class TransactionsDomainMapper @Inject constructor(
             name = dto.name,
             balance = dto.balance.toIntFromDecimal(),
             currency = dto.currency
+        )
+    }
+
+    fun mapTransaction(dto: TransactionDTO): TransactionDomain {
+        return TransactionDomain(
+            id = dto.id,
+            accountId = dto.accountId,
+            categoryId = dto.id,
+            amount = dto.amount,
+            transactionDate = dto.transactionDate,
+            comment = dto.comment,
+            createdAt = dto.createdAt,
+            updatedAt = dto.updatedAt
         )
     }
 }

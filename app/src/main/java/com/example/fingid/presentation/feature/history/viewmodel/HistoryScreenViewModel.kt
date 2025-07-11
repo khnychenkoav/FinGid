@@ -12,7 +12,7 @@ import com.example.fingid.core.utils.formatLongToHumanDate
 import com.example.fingid.core.utils.getCurrentDateIso
 import com.example.fingid.core.utils.getStartOfCurrentMonth
 import com.example.fingid.data.remote.api.AppError
-import com.example.fingid.domain.model.TransactionDomain
+import com.example.fingid.domain.model.TransactionResponseDomain
 import com.example.fingid.domain.usecases.GetExpensesByPeriodUseCase
 import com.example.fingid.domain.usecases.GetIncomesByPeriodUseCase
 import com.example.fingid.presentation.feature.history.mapper.TransactionToTransactionUiMapper
@@ -20,7 +20,6 @@ import com.example.fingid.presentation.feature.history.model.TransactionUiModel
 import com.example.fingid.presentation.feature.history.viewmodel.HistoryScreenState.Error
 import com.example.fingid.presentation.feature.history.viewmodel.HistoryScreenState.Loading
 import com.example.fingid.presentation.feature.history.viewmodel.HistoryScreenState.Success
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,7 +40,6 @@ sealed interface HistoryScreenState {
 
 
 @RequiresApi(Build.VERSION_CODES.O)
-@HiltViewModel
 class HistoryScreenViewModel @Inject constructor(
     private val getExpensesByPeriodUseCase: GetExpensesByPeriodUseCase,
     private val getIncomesByPeriodUseCase: GetIncomesByPeriodUseCase,
@@ -64,7 +62,7 @@ class HistoryScreenViewModel @Inject constructor(
     private val _showDatePickerModal = MutableStateFlow(false)
     val showDatePickerModal: StateFlow<Boolean> = _showDatePickerModal.asStateFlow()
 
-    init {
+    fun initialize() {
         loadHistory()
     }
 
@@ -73,24 +71,26 @@ class HistoryScreenViewModel @Inject constructor(
     private fun loadHistory() {
         _screenState.value = Loading
         viewModelScope.launch(Dispatchers.IO) {
-            if (_historyTransactionsType.value) {
-                getIncomesByPeriodUseCase(
-                    accountId = Constants.TEST_ACCOUNT_ID,
-                    startDate = formatHumanDateToIso(_historyStartDate.value),
-                    endDate = formatHumanDateToIso(_historyEndDate.value)
-                )
-            } else {
-                getExpensesByPeriodUseCase(
-                    accountId = Constants.TEST_ACCOUNT_ID,
-                    startDate = formatHumanDateToIso(_historyStartDate.value),
-                    endDate = formatHumanDateToIso(_historyEndDate.value)
-                )
-            }
+            handleTransactionsResult(
+                if (_historyTransactionsType.value) {
+                    getIncomesByPeriodUseCase(
+                        accountId = Constants.TEST_ACCOUNT_ID,
+                        startDate = formatHumanDateToIso(_historyStartDate.value),
+                        endDate = formatHumanDateToIso(_historyEndDate.value)
+                    )
+                } else {
+                    getExpensesByPeriodUseCase(
+                        accountId = Constants.TEST_ACCOUNT_ID,
+                        startDate = formatHumanDateToIso(_historyStartDate.value),
+                        endDate = formatHumanDateToIso(_historyEndDate.value)
+                    )
+                }
+            )
         }
     }
 
 
-    private fun handleTransactionsResult(result: Result<List<TransactionDomain>>) {
+    private fun handleTransactionsResult(result: Result<List<TransactionResponseDomain>>) {
         result
             .onSuccess { data ->
                 handleSuccess(

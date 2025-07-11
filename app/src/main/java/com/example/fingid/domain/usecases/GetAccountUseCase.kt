@@ -2,7 +2,7 @@ package com.example.fingid.domain.usecases
 
 import com.example.fingid.data.remote.api.AppError
 import com.example.fingid.data.remote.api.NetworkChecker
-import com.example.fingid.domain.model.AccountDomain
+import com.example.fingid.domain.model.AccountResponseDomain
 import com.example.fingid.domain.repository.AccountRepository
 import dagger.Reusable
 import javax.inject.Inject
@@ -14,7 +14,7 @@ class GetAccountUseCase @Inject constructor(
     private val networkChecker: NetworkChecker
 ) {
 
-    suspend operator fun invoke(accountId: Int): Result<AccountDomain> {
+    suspend operator fun invoke(accountId: Int): Result<AccountResponseDomain> {
         if (!networkChecker.isNetworkAvailable()) {
             return Result.failure(AppError.Network)
         }
