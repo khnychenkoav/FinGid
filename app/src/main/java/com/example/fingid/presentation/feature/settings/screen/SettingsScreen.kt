@@ -12,10 +12,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fingid.R
-import com.example.fingid.core.navigation.Route
+import com.example.fingid.core.di.daggerViewModel
 import com.example.fingid.core.navigation.SettingsListItem
 import com.example.fingid.presentation.feature.main.model.ScreenConfig
 import com.example.fingid.presentation.feature.main.model.TopBarConfig
@@ -27,7 +26,7 @@ import com.example.fingid.presentation.shared.model.MainContent
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsScreenViewModel = hiltViewModel(),
+    viewModel: SettingsScreenViewModel = daggerViewModel(),
     updateConfigState: (ScreenConfig) -> Unit
 ) {
     val darkThemeStatus by viewModel.darkThemeStatus.collectAsStateWithLifecycle()
@@ -35,10 +34,7 @@ fun SettingsScreen(
     LaunchedEffect(Unit) {
         updateConfigState(
             ScreenConfig(
-                route = Route.Root.Settings.path,
-                topBarConfig = TopBarConfig(
-                    titleResId = R.string.settings_screen_title
-                )
+                topBarConfig = TopBarConfig(titleResId = R.string.settings_screen_title)
             )
         )
     }

@@ -3,7 +3,6 @@ package com.example.fingid.data.remote.api
 import android.content.Context
 import android.net.ConnectivityManager
 import dagger.Reusable
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 
@@ -13,7 +12,7 @@ interface NetworkChecker {
 
 @Reusable
 class NetworkCheckerImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val context: Context
 ) : NetworkChecker {
 
     override fun isNetworkAvailable(): Boolean {

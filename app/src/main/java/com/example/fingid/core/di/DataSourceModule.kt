@@ -8,33 +8,30 @@ import com.example.fingid.data.datasource.TransactionsRemoteDataSource
 import com.example.fingid.data.datasource.TransactionsRemoteDataSourceImpl
 import dagger.Binds
 import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 
 @Module
-@InstallIn(SingletonComponent::class)
 internal interface DataSourceModule {
 
 
     @Binds
     @Singleton
-    fun bindsAccountRemoteDataSource(
+    fun bindAccountRemoteDataSource(
         accountRemoteDataSource: AccountRemoteDataSourceImpl
     ): AccountRemoteDataSource
 
 
     @Binds
     @Singleton
-    fun bindsCategoriesRemoteDataSource(
+    fun bindCategoriesRemoteDataSource(
         categoriesRemoteDataSource: CategoriesRemoteDataSourceImpl
     ): CategoriesRemoteDataSource
 
 
     @Binds
     @Singleton
-    fun bindsTransactionsRemoteDataSource(
+    fun bindTransactionsRemoteDataSource(
         transactionsRemoteDataSource: TransactionsRemoteDataSourceImpl
     ): TransactionsRemoteDataSource
 }

@@ -1,6 +1,6 @@
 package com.example.fingid.domain.usecases
 
-import com.example.fingid.domain.model.TransactionDomain
+import com.example.fingid.domain.model.TransactionResponseDomain
 import dagger.Reusable
 import javax.inject.Inject
 
@@ -14,7 +14,7 @@ class GetIncomesByPeriodUseCase @Inject constructor(
         accountId: Int,
         startDate: String? = null,
         endDate: String? = null
-    ): Result<List<TransactionDomain>> {
+    ): Result<List<TransactionResponseDomain>> {
         return getTransactionsByPeriod(accountId, startDate, endDate)
             .map { list ->
                 list.filter { it.category.isIncome }
