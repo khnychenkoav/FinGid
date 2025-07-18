@@ -1,6 +1,9 @@
 package com.example.fingid.data.repository
 
+import com.example.fingid.data.datasource.TransactionsLocalDataSource
 import com.example.fingid.data.datasource.TransactionsRemoteDataSource
+import com.example.fingid.data.local.mappers.transaction.toTransactionEntity
+import com.example.fingid.data.local.mappers.transaction.toTransactionModel
 import com.example.fingid.data.remote.api.safeApiCall
 import com.example.fingid.data.repository.mapper.TransactionsDomainMapper
 import com.example.fingid.domain.model.TransactionDomain
@@ -8,24 +11,32 @@ import com.example.fingid.domain.model.TransactionResponseDomain
 import com.example.fingid.domain.repository.TransactionsRepository
 import javax.inject.Inject
 
-
 internal class TransactionsRepositoryImpl @Inject constructor(
     private val remoteDataSource: TransactionsRemoteDataSource,
+    private val localDataSource: TransactionsLocalDataSource,
     private val mapper: TransactionsDomainMapper
 ) : TransactionsRepository {
-
 
     override suspend fun getTransactionsByPeriod(
         accountId: Int,
         startDate: String?,
         endDate: String?
     ): Result<List<TransactionResponseDomain>> {
-        return safeApiCall(
-            call = {
-                remoteDataSource.getTransactionsByPeriod(accountId, startDate, endDate)
-                    .map(mapper::mapTransactionResponse)
+        return try {
+            val remoteTransactions = remoteDataSource.getTransactionsByPeriod(accountId, startDate, endDate)
+
+            localDataSource.insertAll(remoteTransactions.map { it.toTransactionEntity(isSynced = true) })
+
+            Result.success(remoteTransactions.map(mapper::mapTransactionResponse))
+        } catch (e: Exception) {
+            val cachedTransactions = localDataSource.getAll().map { it.toTransactionModel() }
+
+            if (cachedTransactions.isNotEmpty()) {
+                Result.success(cachedTransactions)
+            } else {
+                Result.failure(e)
             }
-        )
+        }
     }
 
     override suspend fun createTransaction(
@@ -50,7 +61,6 @@ internal class TransactionsRepositoryImpl @Inject constructor(
         )
     }
 
-
     override suspend fun getTransactionById(transactionId: Int): Result<TransactionResponseDomain> {
         return safeApiCall(
             call = {
@@ -60,7 +70,6 @@ internal class TransactionsRepositoryImpl @Inject constructor(
             }
         )
     }
-
 
     override suspend fun updateTransactionById(
         transactionId: Int,
@@ -86,8 +95,8 @@ internal class TransactionsRepositoryImpl @Inject constructor(
         )
     }
 
-
     override suspend fun deleteTransactionById(transactionId: Int): Result<Unit> {
+        localDataSource.delete(transactionId)
         return safeApiCall(
             call = { remoteDataSource.deleteTransactionById(transactionId) },
             handleSuccess = {

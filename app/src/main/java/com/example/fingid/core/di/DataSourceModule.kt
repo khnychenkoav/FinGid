@@ -4,6 +4,8 @@ import com.example.fingid.data.datasource.AccountRemoteDataSource
 import com.example.fingid.data.datasource.AccountRemoteDataSourceImpl
 import com.example.fingid.data.datasource.CategoriesRemoteDataSource
 import com.example.fingid.data.datasource.CategoriesRemoteDataSourceImpl
+import com.example.fingid.data.datasource.TransactionsLocalDataSource
+import com.example.fingid.data.datasource.TransactionsLocalDataSourceImpl
 import com.example.fingid.data.datasource.TransactionsRemoteDataSource
 import com.example.fingid.data.datasource.TransactionsRemoteDataSourceImpl
 import dagger.Binds
@@ -34,4 +36,11 @@ internal interface DataSourceModule {
     fun bindTransactionsRemoteDataSource(
         transactionsRemoteDataSource: TransactionsRemoteDataSourceImpl
     ): TransactionsRemoteDataSource
+
+
+    @Binds
+    @Singleton
+    fun bindTransactionsLocalDataSource(
+        transactionsLocalDataSource: TransactionsLocalDataSourceImpl
+    ): TransactionsLocalDataSource
 }

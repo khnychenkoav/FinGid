@@ -37,5 +37,8 @@ sealed class Route(val path: String) {
             fun transactionId(): String = "id"
             fun route(transactionId: Int) = "transaction_update_screen/expense/$transactionId"
         }
+
+        data object ExpensesAnalysis : Root(path = "analysis_screen/expenses")
+        data object IncomesAnalysis : Root(path = "analysis_screen/incomes")
     }
 }

@@ -1,32 +1,41 @@
-package com.example.fingid.presentation.feature.history.screen
+package com.example.fingid.presentation.feature.analysis.screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fingid.R
 import com.example.fingid.core.di.daggerViewModel
-import com.example.fingid.core.navigation.Route
+import com.example.fingid.core.utils.formatWithSpaces
+import com.example.fingid.presentation.feature.analysis.viewmodel.AnalysisEvent
+import com.example.fingid.presentation.feature.analysis.viewmodel.AnalysisState
+import com.example.fingid.presentation.feature.analysis.viewmodel.AnalysisViewModel
 import com.example.fingid.presentation.feature.history.component.DateSelectionHeader
-import com.example.fingid.presentation.feature.history.model.TransactionUiModel
 import com.example.fingid.presentation.feature.history.viewmodel.DateType
 import com.example.fingid.presentation.feature.history.viewmodel.HistoryScreenState
 import com.example.fingid.presentation.feature.history.viewmodel.HistoryScreenViewModel
 import com.example.fingid.presentation.feature.main.model.ScreenConfig
-import com.example.fingid.presentation.feature.main.model.TopBarAction
 import com.example.fingid.presentation.feature.main.model.TopBarBackAction
 import com.example.fingid.presentation.feature.main.model.TopBarConfig
 import com.example.fingid.presentation.shared.components.DatePickerModal
@@ -34,45 +43,35 @@ import com.example.fingid.presentation.shared.components.EmptyState
 import com.example.fingid.presentation.shared.components.ErrorState
 import com.example.fingid.presentation.shared.components.ListItemCard
 import com.example.fingid.presentation.shared.components.LoadingState
+import com.example.fingid.presentation.shared.model.LeadContent
 import com.example.fingid.presentation.shared.model.ListItem
 import com.example.fingid.presentation.shared.model.MainContent
 import com.example.fingid.presentation.shared.model.TrailContent
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HistoryScreen(
+fun AnalysisScreen(
     viewModel: HistoryScreenViewModel = daggerViewModel(),
-    isIncome: Boolean,
     updateConfigState: (ScreenConfig) -> Unit,
-    onBackNavigate: () -> Unit,
-    onAnalysisNavigate: () -> Unit
+    isIncome: Boolean,
+    onBackNavigate: () -> Unit
 ) {
     val state by viewModel.screenState.collectAsStateWithLifecycle()
     val startDate by viewModel.historyStartDate.collectAsStateWithLifecycle()
     val endDate by viewModel.historyEndDate.collectAsStateWithLifecycle()
-
     val showDatePickerModal by viewModel.showDatePickerModal.collectAsStateWithLifecycle()
 
-    val emptyMessage = when (isIncome) {
-        true -> R.string.period_no_income_found
-        false -> R.string.period_no_expenses_found
+    LaunchedEffect(isIncome) {
+        viewModel.setHistoryTransactionsType(isIncome)
+        viewModel.initialize()
     }
 
     LaunchedEffect(Unit) {
-        viewModel.setHistoryTransactionsType(isIncome)
-        viewModel.initialize()
         updateConfigState(
             ScreenConfig(
                 topBarConfig = TopBarConfig(
-                    titleResId = R.string.expenses_history_screen_title,
-                    backAction = TopBarBackAction(
-                        actionUnit = onBackNavigate
-                    ),
-                    action = TopBarAction(
-                        iconResId = R.drawable.ic_calendar,
-                        descriptionResId = R.string.expenses_analysis_description,
-                        actionUnit = onAnalysisNavigate
-                    )
+                    titleResId = R.string.analysis_screen_title,
+                    backAction = TopBarBackAction(actionUnit = onBackNavigate)
                 )
             )
         )
@@ -86,21 +85,14 @@ fun HistoryScreen(
             onEndDate = { viewModel.showDatePickerModal(DateType.END) }
         )
 
-        when (state) {
+        when (val uiState = state) {
             is HistoryScreenState.Loading -> LoadingState()
             is HistoryScreenState.Error -> ErrorState(
-                messageResId = (state as HistoryScreenState.Error).messageResId,
-                onRetry = (state as HistoryScreenState.Error).retryAction
+                messageResId = uiState.messageResId,
+                onRetry = uiState.retryAction
             )
-
-            is HistoryScreenState.Empty -> EmptyState(
-                messageResId = emptyMessage
-            )
-
-            is HistoryScreenState.Success -> HistorySuccessState(
-                transactions = (state as HistoryScreenState.Success).transactions,
-                totalAmount = (state as HistoryScreenState.Success).totalAmount
-            )
+            is HistoryScreenState.Empty -> EmptyState(messageResId = R.string.no_data_for_period)
+            is HistoryScreenState.Success -> AnalysisView(state = uiState)
         }
     }
 
@@ -112,33 +104,52 @@ fun HistoryScreen(
     }
 }
 
+
 @Composable
-private fun HistorySuccessState(
-    transactions: List<TransactionUiModel>,
-    totalAmount: String
+fun AnalysisView(
+    modifier: Modifier = Modifier,
+    state: HistoryScreenState.Success,
 ) {
-    Column(Modifier.fillMaxSize()) {
+    val scrollState = rememberScrollState()
+
+    val groupedTransactions = state.transactions.groupBy { it.title }
+    val totalSum = state.transactions.sumOf { it.amount }
+    val currencySymbol = state.transactions.firstOrNull()?.currency ?: ""
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(state = scrollState)
+    ) {
         ListItemCard(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.onTertiaryContainer)
                 .height(56.dp),
-            showDivider = false,
             item = ListItem(
-                content = MainContent(title = stringResource(R.string.summary)),
-                trail = TrailContent(text = totalAmount)
+                content = MainContent(title = stringResource(R.string.total_amount)),
+                trail = TrailContent(text = "${totalSum.toString().formatWithSpaces()} $currencySymbol")
             )
         )
-        LazyColumn {
-            items(transactions, key = { transaction -> transaction.id }) { expense ->
+
+        groupedTransactions
+            .mapValues { entry -> entry.value.sumOf { it.amount } }
+            .toList()
+            .sortedByDescending { it.second }
+            .forEach { (categoryName, categorySum) ->
+                val emoji = state.transactions.first { it.title == categoryName }.emoji
+                val percentage = if (totalSum > 0) (categorySum.toDouble() / totalSum * 100).toInt() else 0
+
                 ListItemCard(
-                    modifier = Modifier
-                        .clickable { }
-                        .height(70.dp),
-                    item = expense.toListItem(),
-                    trailIcon = R.drawable.ic_arrow_right,
-                    subtitleStyle = MaterialTheme.typography.labelMedium
+                    modifier = Modifier.height(70.dp),
+                    item = ListItem(
+                        lead = LeadContent.Text(text = emoji),
+                        content = MainContent(title = categoryName),
+                        trail = TrailContent(
+                            text = "${percentage}%",
+                            subtext = "${categorySum.toString().formatWithSpaces()} $currencySymbol"
+                        )
+                    )
                 )
             }
-        }
     }
 }
