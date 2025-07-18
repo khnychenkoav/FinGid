@@ -31,8 +31,14 @@ import com.example.fingid.core.utils.formatWithSpaces
 import com.example.fingid.presentation.feature.analysis.viewmodel.AnalysisEvent
 import com.example.fingid.presentation.feature.analysis.viewmodel.AnalysisState
 import com.example.fingid.presentation.feature.analysis.viewmodel.AnalysisViewModel
+import com.example.fingid.presentation.feature.history.component.DateSelectionHeader
+import com.example.fingid.presentation.feature.history.viewmodel.DateType
+import com.example.fingid.presentation.feature.history.viewmodel.HistoryScreenState
+import com.example.fingid.presentation.feature.history.viewmodel.HistoryScreenViewModel
 import com.example.fingid.presentation.feature.main.model.ScreenConfig
+import com.example.fingid.presentation.feature.main.model.TopBarBackAction
 import com.example.fingid.presentation.feature.main.model.TopBarConfig
+import com.example.fingid.presentation.shared.components.DatePickerModal
 import com.example.fingid.presentation.shared.components.EmptyState
 import com.example.fingid.presentation.shared.components.ErrorState
 import com.example.fingid.presentation.shared.components.ListItemCard
@@ -45,66 +51,70 @@ import com.example.fingid.presentation.shared.model.TrailContent
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AnalysisScreen(
-    viewModel: AnalysisViewModel = daggerViewModel(),
-    updateConfigState: (ScreenConfig) -> Unit
+    viewModel: HistoryScreenViewModel = daggerViewModel(),
+    updateConfigState: (ScreenConfig) -> Unit,
+    isIncome: Boolean,
+    onBackNavigate: () -> Unit
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    val state by viewModel.screenState.collectAsStateWithLifecycle()
+    val startDate by viewModel.historyStartDate.collectAsStateWithLifecycle()
+    val endDate by viewModel.historyEndDate.collectAsStateWithLifecycle()
+    val showDatePickerModal by viewModel.showDatePickerModal.collectAsStateWithLifecycle()
 
-    LaunchedEffect(selectedTabIndex) {
-        viewModel.onEvent(AnalysisEvent.OnLoadTransactions(isIncome = selectedTabIndex == 1))
+    LaunchedEffect(isIncome) {
+        viewModel.setHistoryTransactionsType(isIncome)
+        viewModel.initialize()
     }
 
     LaunchedEffect(Unit) {
         updateConfigState(
             ScreenConfig(
-                topBarConfig = TopBarConfig(titleResId = R.string.analysis_screen_title)
+                topBarConfig = TopBarConfig(
+                    titleResId = R.string.analysis_screen_title,
+                    backAction = TopBarBackAction(actionUnit = onBackNavigate)
+                )
             )
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.onTertiary
-        ) {
-            Tab(
-                selected = selectedTabIndex == 0,
-                onClick = { selectedTabIndex = 0 },
-                text = { Text(stringResource(R.string.expense_screen_label)) }
-            )
-            Tab(
-                selected = selectedTabIndex == 1,
-                onClick = { selectedTabIndex = 1 },
-                text = { Text(stringResource(R.string.income_screen_label)) }
-            )
-        }
+    Column(Modifier.fillMaxSize()) {
+        DateSelectionHeader(
+            startDate = startDate,
+            onStartDate = { viewModel.showDatePickerModal(DateType.START) },
+            endDate = endDate,
+            onEndDate = { viewModel.showDatePickerModal(DateType.END) }
+        )
 
         when (val uiState = state) {
-            is AnalysisState.Loading -> LoadingState()
-            is AnalysisState.Error -> ErrorState(messageResId = uiState.messageResId, onRetry = {
-                viewModel.onEvent(AnalysisEvent.OnLoadTransactions(isIncome = selectedTabIndex == 1))
-            })
-            is AnalysisState.Content -> {
-                if (uiState.transactions.isEmpty()) {
-                    EmptyState(messageResId = R.string.no_data_for_period)
-                } else {
-                    AnalysisView(state = uiState)
-                }
-            }
+            is HistoryScreenState.Loading -> LoadingState()
+            is HistoryScreenState.Error -> ErrorState(
+                messageResId = uiState.messageResId,
+                onRetry = uiState.retryAction
+            )
+            is HistoryScreenState.Empty -> EmptyState(messageResId = R.string.no_data_for_period)
+            is HistoryScreenState.Success -> AnalysisView(state = uiState)
         }
     }
+
+    if (showDatePickerModal) {
+        DatePickerModal(
+            onDateSelected = { viewModel.confirmDateSelection(it) },
+            onDismiss = { viewModel.onDismissDatePicker() }
+        )
+    }
 }
+
 
 @Composable
 fun AnalysisView(
     modifier: Modifier = Modifier,
-    state: AnalysisState.Content
+    state: HistoryScreenState.Success,
 ) {
     val scrollState = rememberScrollState()
+
+    val groupedTransactions = state.transactions.groupBy { it.title }
     val totalSum = state.transactions.sumOf { it.amount }
-    val currencySymbol = state.transactions.firstOrNull()?.account?.getCurrencySymbol() ?: ""
+    val currencySymbol = state.transactions.firstOrNull()?.currency ?: ""
 
     Column(
         modifier = modifier
@@ -121,17 +131,19 @@ fun AnalysisView(
             )
         )
 
-        state.transactions
-            .groupBy { it.category }
+        groupedTransactions
             .mapValues { entry -> entry.value.sumOf { it.amount } }
             .toList()
             .sortedByDescending { it.second }
-            .forEach { (category, categorySum) ->
+            .forEach { (categoryName, categorySum) ->
+                val emoji = state.transactions.first { it.title == categoryName }.emoji
                 val percentage = if (totalSum > 0) (categorySum.toDouble() / totalSum * 100).toInt() else 0
+
                 ListItemCard(
+                    modifier = Modifier.height(70.dp),
                     item = ListItem(
-                        lead = LeadContent.Text(text = category.emoji),
-                        content = MainContent(title = category.name),
+                        lead = LeadContent.Text(text = emoji),
+                        content = MainContent(title = categoryName),
                         trail = TrailContent(
                             text = "${percentage}%",
                             subtext = "${categorySum.toString().formatWithSpaces()} $currencySymbol"
@@ -139,6 +151,5 @@ fun AnalysisView(
                     )
                 )
             }
-
     }
 }
