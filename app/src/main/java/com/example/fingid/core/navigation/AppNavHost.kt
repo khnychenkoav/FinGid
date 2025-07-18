@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.fingid.presentation.feature.analysis.screen.AnalysisScreen
 import com.example.fingid.presentation.feature.balance.screen.BalanceScreen
 import com.example.fingid.presentation.feature.balance_update.screen.BalanceUpdateScreen
 import com.example.fingid.presentation.feature.categories.screen.CategoriesScreen
@@ -109,7 +110,10 @@ fun AppNavHost(
             HistoryScreen(
                 isIncome = false,
                 updateConfigState = updateConfigState,
-                onBackNavigate = { navController.popBackStack() }
+                onBackNavigate = { navController.popBackStack() },
+                onAnalysisNavigate = {
+                    navController.navigate(Route.SubScreens.ExpensesAnalysis.path)
+                }
             )
         }
 
@@ -118,10 +122,28 @@ fun AppNavHost(
             HistoryScreen(
                 isIncome = true,
                 updateConfigState = updateConfigState,
+                onBackNavigate = { navController.popBackStack() },
+                onAnalysisNavigate = {
+                    navController.navigate(Route.SubScreens.IncomesAnalysis.path)
+                }
+            )
+        }
+
+        composable(route = Route.SubScreens.ExpensesAnalysis.path) {
+            AnalysisScreen(
+                isIncome = false,
+                updateConfigState = updateConfigState,
                 onBackNavigate = { navController.popBackStack() }
             )
         }
 
+        composable(route = Route.SubScreens.IncomesAnalysis.path) {
+            AnalysisScreen(
+                isIncome = true,
+                updateConfigState = updateConfigState,
+                onBackNavigate = { navController.popBackStack() }
+            )
+        }
 
         composable(route = Route.SubScreens.ExpenseTransactionCreation.path) {
             TransactionCreationScreen(

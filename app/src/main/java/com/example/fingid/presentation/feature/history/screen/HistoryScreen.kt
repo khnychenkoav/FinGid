@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fingid.R
 import com.example.fingid.core.di.daggerViewModel
+import com.example.fingid.core.navigation.Route
 import com.example.fingid.presentation.feature.history.component.DateSelectionHeader
 import com.example.fingid.presentation.feature.history.model.TransactionUiModel
 import com.example.fingid.presentation.feature.history.viewmodel.DateType
@@ -43,7 +44,8 @@ fun HistoryScreen(
     viewModel: HistoryScreenViewModel = daggerViewModel(),
     isIncome: Boolean,
     updateConfigState: (ScreenConfig) -> Unit,
-    onBackNavigate: () -> Unit
+    onBackNavigate: () -> Unit,
+    onAnalysisNavigate: () -> Unit
 ) {
     val state by viewModel.screenState.collectAsStateWithLifecycle()
     val startDate by viewModel.historyStartDate.collectAsStateWithLifecycle()
@@ -69,7 +71,7 @@ fun HistoryScreen(
                     action = TopBarAction(
                         iconResId = R.drawable.ic_calendar,
                         descriptionResId = R.string.expenses_analysis_description,
-                        actionUnit = onBackNavigate
+                        actionUnit = onAnalysisNavigate
                     )
                 )
             )

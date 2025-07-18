@@ -73,4 +73,7 @@
     <string name="amount_error_message">Введите корректные размер транзакции</string>
     <string name="delete_expense_transaction">Удалить расход</string>
     <string name="delete_income_transaction">Удалить доход</string>
+    <string name="analysis_screen_title">Анализ</string>
+    <string name="analysis_screen_label">Анализ</string>
+    <string name="no_data_for_period">Нет данных за выбранный период</string>
 </resources>
