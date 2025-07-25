@@ -110,6 +110,17 @@ fun AnalysisView(
     modifier: Modifier = Modifier,
     state: HistoryScreenState.Success,
 ) {
+    val groupedData = state.transactions
+        .groupBy { it.title }
+        .mapValues { entry -> entry.value.sumOf { it.amount }.toFloat() }
+
+    val chartDataForModule = com.example.feature_chart.ChartData(
+        points = groupedData.map { (label, value) ->
+            com.example.feature_chart.ChartDataPoint(label = label, value = value)
+        }.sortedByDescending { it.value }
+    )
+
+
     val scrollState = rememberScrollState()
 
     val groupedTransactions = state.transactions.groupBy { it.title }
@@ -121,6 +132,11 @@ fun AnalysisView(
             .fillMaxSize()
             .verticalScroll(state = scrollState)
     ) {
+
+        if (chartDataForModule.points.isNotEmpty()) {
+            com.example.feature_chart.SimpleBarChart(chartData = chartDataForModule)
+        }
+
         ListItemCard(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.onTertiaryContainer)
