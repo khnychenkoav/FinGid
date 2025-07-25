@@ -1,12 +1,15 @@
 package com.example.fingid.core.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.fingid.R
+import com.example.fingid.presentation.feature.about.AboutScreen
 import com.example.fingid.presentation.feature.analysis.screen.AnalysisScreen
 import com.example.fingid.presentation.feature.balance.screen.BalanceScreen
 import com.example.fingid.presentation.feature.balance_update.screen.BalanceUpdateScreen
@@ -15,6 +18,8 @@ import com.example.fingid.presentation.feature.expenses.screen.ExpensesScreen
 import com.example.fingid.presentation.feature.history.screen.HistoryScreen
 import com.example.fingid.presentation.feature.incomes.screen.IncomeScreen
 import com.example.fingid.presentation.feature.main.model.ScreenConfig
+import com.example.fingid.presentation.feature.main.model.TopBarBackAction
+import com.example.fingid.presentation.feature.main.model.TopBarConfig
 import com.example.fingid.presentation.feature.settings.screen.SettingsScreen
 import com.example.fingid.presentation.feature.transaction_creation.screen.TransactionCreationScreen
 import com.example.fingid.presentation.feature.transaction_update.screen.TransactionUpdateScreen
@@ -102,7 +107,10 @@ fun AppNavHost(
 
 
         composable(route = Route.Root.Settings.path) {
-            SettingsScreen(updateConfigState = updateConfigState)
+            SettingsScreen(
+                updateConfigState = updateConfigState,
+                onAboutNavigate = { navController.navigate(Route.SubScreens.About.path) }
+            )
         }
 
 
@@ -213,5 +221,20 @@ fun AppNavHost(
                 onBackNavigate = { navController.popBackStack() }
             )
         }
+
+        composable(route = Route.SubScreens.About.path) {
+            LaunchedEffect(Unit) {
+                updateConfigState(
+                    ScreenConfig(
+                        topBarConfig = TopBarConfig(
+                            titleResId = R.string.about_option,
+                            backAction = TopBarBackAction(actionUnit = { navController.popBackStack() })
+                        )
+                    )
+                )
+            }
+            AboutScreen()
+        }
+
     }
 }

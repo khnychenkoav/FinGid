@@ -27,7 +27,8 @@ import com.example.fingid.presentation.shared.model.MainContent
 @Composable
 fun SettingsScreen(
     viewModel: SettingsScreenViewModel = daggerViewModel(),
-    updateConfigState: (ScreenConfig) -> Unit
+    updateConfigState: (ScreenConfig) -> Unit,
+    onAboutNavigate: () -> Unit
 ) {
     val darkThemeStatus by viewModel.darkThemeStatus.collectAsStateWithLifecycle()
 
@@ -52,7 +53,11 @@ fun SettingsScreen(
                 val optionTitle = stringResource(option.titleResId)
                 ListItemCard(
                     modifier = Modifier
-                        .clickable { }
+                        .clickable {
+                            if (option.titleResId == R.string.about_option) {
+                                onAboutNavigate()
+                            }
+                        }
                         .height(56.dp),
                     item = ListItem(content = MainContent(title = optionTitle)),
                     trailIcon = R.drawable.ic_filled_arrow_right

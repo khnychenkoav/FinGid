@@ -40,5 +40,7 @@ sealed class Route(val path: String) {
 
         data object ExpensesAnalysis : Root(path = "analysis_screen/expenses")
         data object IncomesAnalysis : Root(path = "analysis_screen/incomes")
+
+        data object About : Route("about_screen")
     }
 }
