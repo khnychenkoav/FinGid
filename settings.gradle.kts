@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "fingid"
 include(":app")
 include(":feature_chart")
+include(":domain")

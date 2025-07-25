@@ -8,6 +8,7 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.56.2" apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.jetbrains.kotlin.jvm) apply false
 }
 
 tasks.withType<Detekt>().configureEach {
